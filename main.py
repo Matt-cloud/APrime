@@ -1,17 +1,18 @@
 from pathlib import Path
 from discord.ext import commands
 from termcolor import colored 
+from lib.utils.globals import db, logger
+from lib.utils import bot
 
 import asyncio
 import datetime
 import json
 import discord
-import lib
 import os
 
 def config_load():
     configPath = os.path.join(os.getcwd(), "data", "config.json")
-    with open(configPath, "rb") as doc:
+    with open(configPath) as doc:
         data =  json.load(doc)
     return data
 
@@ -41,7 +42,6 @@ class Bot(commands.Bot):
         self.app_info = None
 
         self.config = kwargs.pop('config')
-        self.logger = lib.logger.Logger(loggingFile=os.path.join(os.getcwd(), "app.log"))
 
         self.loop.create_task(self.track_start())
         self.loop.create_task(self.load_all_extensions())
@@ -50,9 +50,9 @@ class Bot(commands.Bot):
         await self.wait_until_ready()
         self.start_time = datetime.datetime.utcnow()
 
-    async def get_prefix_(self, bot, message):
-        prefix = [self.config["prefix"]]
-        return commands.when_mentioned_or(*prefix)(bot, message)
+    async def get_prefix_(self, bot_, message):
+        prefix = [bot.getPrefix()]
+        return commands.when_mentioned_or(*prefix)(bot_, message)
 
     async def load_all_extensions(self):
         await self.wait_until_ready()
@@ -64,21 +64,23 @@ class Bot(commands.Bot):
 
             try:
                 self.load_extension(f'cogs.{extension}')
-                print(f'loaded {extension}')
+                logger.log(f"Extension : {extension} is loaded")
             except Exception as e:
-                error = f'{extension}\n {type(e).__name__} : {e}'
-                print(f'failed to load extension {error}')
+                logger.log(f"Failed to load extension : {extension}")
 
-            print('-' * 10)
 
     async def on_ready(self):
+        self.remove_command("help")
         self.app_info = await self.application_info()
-
-        print('-' * 10)
-
-        
-
-        print('-' * 10)
+        x = self.app_info
+        ui = f"""
+# Discord.py Version : {discord.__version__}
+# Name : {x.name}
+# ID : {x.id}
+# Owner : {x.owner}
+# Default Prefix : {self.config['prefix']}
+"""
+        logger.log(ui)
 
     async def on_message(self, message):
         if message.author.bot:

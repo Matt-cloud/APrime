@@ -6,6 +6,13 @@ dpy-ui
 colorama
 termcolor
 
+# Database
+pymongo
+dnspython
+
+# Misc
+favicon
+
 # VSCODE
 pylint
 autopep8
