@@ -50,7 +50,6 @@ async def properUsage(self, ctx, example, send=True):
     return e
 
 async def embed(self, ctx, title=None, description=None, url=None, fields=None, color=None, thumbnail=None, image=None, footer=defaultFooter, showTimeStamp=True, send=True):
-    print(locals().values())
     if type(title) is dict:
         e = Embed.from_dict(title)
         if send:

@@ -89,10 +89,10 @@ class AdminStuff(commands.Cog):
         latency = round((time.monotonic() - start)*1000, 2)
         await ui.embed(self, ctx, title="Successfully reloaded module", description=f"`{reloaded}`")
     
-    @commands.command(hidden=True, name="test")
+    @commands.command(hidden=True, name="test", usage="test <new_name>")
     @checks.is_owner()
     async def testCommand(self, ctx):
-        ui.test(locals().values())
+        await ui.properUsage(self, ctx, "test fucking idk")
     
     @commands.command(name="eval", hidden="true")
     @checks.is_owner()

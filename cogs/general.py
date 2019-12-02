@@ -1,6 +1,6 @@
 from imports import *
 
-class Sample(commands.Cog):
+class General(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -48,13 +48,30 @@ class Sample(commands.Cog):
     @commands.command(description="Returns the list of commands", usage="help")
     async def help(self, ctx):
         commands = []
+        prefix = bot.getPrefix()
+
         for command in self.bot.commands:
+            # First turn it into an array so we could sort it
             if not command.hidden:
-                data = f"**{bot.getPrefix()}{command.name}**\n{command.description}\n**Usage: {bot.getPrefix()}{command.usage}**\n\n"
+                data = {
+                    "prefix": prefix,
+                    "name": command.name,
+                    "description": command.description,
+                    "usage": command.usage,
+                    "category": command.cog.qualified_name
+                }
                 commands.append(data)
-        commands = "".join(commands)
-        
-        await ui.embed(self, ctx, title="Command List", description=commands)
+
+        # Sort it
+        output = []
+
+        # Convert the array of command into a readeable output
+        for command in commands:
+            data = f"**{command['prefix']}{command['name']}**\n{command['description']}\nCategory: `{command['category']}`\n**Usage: {command['prefix']}{command['usage']}**\n\n"
+            output.append(data)
+        output = "".join(output)
+
+        await ui.embed(self, ctx, title="Command List", description=output)
 
 def setup(bot):
-    bot.add_cog(Sample(bot))
+    bot.add_cog(General(bot))

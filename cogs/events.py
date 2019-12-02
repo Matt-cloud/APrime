@@ -20,7 +20,9 @@ class Events(commands.Cog):
         
         if isinstance(error, exceptions.OwnerOnlyCommand):
             p = dict(title="This command can only be used by the bot owner.")
-
+        
+        elif isinstance(error, commands.errors.MissingPermissions):
+            p = dict(title="Missing Permissions", description=f"You are missing the following permission(s) : `{', '.join([' '.join(x.split('_')).title() for x in error.missing_perms])}`")
         elif isinstance(error, commands.DisabledCommand):
             p = dict(title="This command is currently disabled.")
         elif isinstance(error, self.commonErrors):

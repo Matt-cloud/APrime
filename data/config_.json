@@ -1,0 +1,10 @@
+{
+    "token": "remove _ in title of this file. and fill in the credentials",
+    "prefix": "",
+    "description": "",
+    "database": {
+        "user": "",
+        "password": ""
+    },
+    "owners": []
+}
