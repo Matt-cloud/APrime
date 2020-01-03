@@ -1,9 +1,11 @@
 from discord.embeds import Embed
 from lib.utils import bot
+from lib.utils.globals import db
 
 import discord 
 import datetime
 import random
+import asyncio
 
 colors = {
     "red": 0xF44336,
@@ -32,14 +34,61 @@ defaultFooter = {
     "icon": "//author.avatar//"
 }
 
+class reactionConfirmation:
+    def __init__(self, bot, ctx, content, reactions, **kwargs):
+        self.reactions = reactions
+        self.ctx = ctx
+        self.timeout = kwargs.get("timeout", 120.0)
+        self.content = content
+        self.bot = bot
+        self.check = kwargs.get("check", None)
+        self.timeout_content = kwargs.get("timeout_content", None)
+
+    async def start(self):
+        content = parseContent(self.content)
+        message = await self.ctx.send(**content)
+
+        for reaction in list(self.reactions.keys()):
+            await message.add_reaction(reaction)
+        
+        if not self.check:
+            def check(reaction, user):
+                return user == self.ctx.author and str(reaction.emoji) in self.reactions and reaction.message.id == message.id
+        else:
+            check = self.check
+        
+        try:
+            reaction, user = await self.bot.wait_for('reaction_add', timeout=self.timeout, check=check)
+            function = self.reactions[str(reaction.emoji)]
+
+            if asyncio.iscoroutinefunction(function):
+                await function()
+            else:
+                function()
+
+        except asyncio.TimeoutError:
+            content = self.timeout_content
+            if content:
+                content = parseContent(content)
+                await self.ctx.send(**content)
+
+def parseContent(c):
+    if isinstance(c, discord.embeds.Embed):
+        content = dict(embed=c)
+    elif isinstance(c, dict):
+        content = c # You could also pass in your own dictionary
+    else:
+        content = dict(content=c)
+    return content
+
 async def properUsage(self, ctx, example, send=True):
     fields = [
         {
-            "Proper Usage": f"{bot.getPrefix()}{ctx.command.usage}",
+            "Proper Usage": f"{bot.getPrefix(ctx.guild, db)}{ctx.command.usage}",
             "inline": False
         },
         {
-            "Example": f"`{bot.getPrefix()}{example}`",
+            "Example": f"`{bot.getPrefix(ctx.guild, db)}{example}`",
             "inline": False
         }
     ]

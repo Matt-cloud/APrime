@@ -22,7 +22,13 @@ def insert_returns(body):
 
 class AdminStuff(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot 
+        self.bot = bot
+
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def shutdown(self, ctx):
+        # bruh
+        exit() 
 
     @commands.command(hidden=True)
     @checks.is_owner()

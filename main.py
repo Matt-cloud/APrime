@@ -29,7 +29,7 @@ async def run():
     try:
         await bot.start(config['token'])
     except KeyboardInterrupt:
-        await bot.logout()
+        exit() # well it's faster
 
 
 class Bot(commands.Bot):
@@ -51,7 +51,7 @@ class Bot(commands.Bot):
         self.start_time = datetime.datetime.utcnow()
 
     async def get_prefix_(self, bot_, message):
-        prefix = [bot.getPrefix()]
+        prefix = bot.getPrefix(message.guild, db, asList=True)
         return commands.when_mentioned_or(*prefix)(bot_, message)
 
     async def load_all_extensions(self):
@@ -73,12 +73,14 @@ class Bot(commands.Bot):
         self.remove_command("help")
         self.app_info = await self.application_info()
         x = self.app_info
+        customPrefixes = db.prefixes.count_documents({})
         ui = f"""
 # Discord.py Version : {discord.__version__}
 # Name : {x.name}
 # ID : {x.id}
 # Owner : {x.owner}
 # Default Prefix : {self.config['prefix']}
+# {customPrefixes} custom prefix{'s' if customPrefixes > 1 else ''}
 """
         logger.log(ui)
 

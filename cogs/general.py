@@ -48,7 +48,7 @@ class General(commands.Cog):
     @commands.command(description="Returns the list of commands", usage="help")
     async def help(self, ctx):
         commands = []
-        prefix = bot.getPrefix()
+        prefix = bot.getPrefix(ctx.guild, db)
 
         for command in self.bot.commands:
             # First turn it into an array so we could sort it
