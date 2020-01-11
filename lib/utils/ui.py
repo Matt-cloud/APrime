@@ -88,7 +88,7 @@ async def properUsage(self, ctx, example, send=True):
             "inline": False
         },
         {
-            "Example": f"`{bot.getPrefix(ctx.guild, db)}{example}`",
+            "Example": f"{bot.getPrefix(ctx.guild, db)}{example}",
             "inline": False
         }
     ]

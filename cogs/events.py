@@ -27,6 +27,8 @@ class Events(commands.Cog):
             p = dict(title="This command is currently disabled.")
         elif isinstance(error, self.commonErrors):
             p = dict(title="Common Error", description=f"```{error}```")
+        elif isinstance(error, commands.errors.BadArgument):
+            p = dict(title="Bad Argument", description=f"{error}")
         else:
             fullTB = "".join(traceback.format_exception(type(error), error, error.__traceback__))
             p = dict(title="Error", description=f"```{fullTB}```")

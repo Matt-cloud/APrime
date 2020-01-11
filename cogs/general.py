@@ -73,5 +73,19 @@ class General(commands.Cog):
 
         await ui.embed(self, ctx, title="Command List", description=output)
 
+    @commands.command(description="Allows you to report members to the server moderator.", usage="report <mention a member> <reason for being reported>")
+    async def report(self, ctx, user: discord.Member = None, *, reason: str = None):
+        if user is None or reason is None:
+            return await ui.properUsage(self, ctx, f"report {ctx.author.mention} reported for being too cool :)")
+        
+        # TODO: If there is no report channel then cancel the process (return a message)
+        # TODO: If there is a report channel then send the report to that channel
+
+        # NOTE: Template
+        # Date: (seperate from embed timestamp)
+        # Report by: ctx.author
+        # Reported member: user
+        # Reason: reason
+
 def setup(bot):
     bot.add_cog(General(bot))

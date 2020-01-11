@@ -114,6 +114,21 @@ To cancel click ❌.
         confirmation = ui.reactionConfirmation(self.bot, ctx, confirmationEmbed, reactions)
 
         await confirmation.start()
+    
+    @commands.command(description="Allows you to setup a report channel so that members can report other members.", usage="set_report_channel <mention a channel>")
+    @commands.has_permissions(manage_guild=True)
+    async def set_report_channel(self, ctx, channel: discord.TextChannel = None):
+        if channel is None:
+            return await ui.properUsage(self, ctx, f"set_report_channel {ctx.channel.mention}")
+        
+        # TODO: If report channel already exists then ask if wanna overwrite
+            # TODO: If overwrite then ask user if he wants to move all reports to that channel or keep it in the old channel.
+                # TODO: If move, only move it with an interval of 10 seconds to avoid api abuse (tell to user)
+                # NOTE: If bot goes down while moving reports, handle it magically so that it starts moving the next time it goes up.
+                # NOTE: Handle stuff like if one of the channels get deleted.
+
+        # TODO: else
+            # TODO : Add report channel to the database
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
