@@ -131,9 +131,11 @@ To cancel click ❌.
             return await ui.embed(self, ctx, title="That's already the report channel for this server.", color=ui.colors['red'])
         
         if db.report_channels.count_documents({"guild_id": ctx.guild.id}):
-            
+            prevReport = db.report_channels.find_one({"guild_id": ctx.guild.id})
+            prevReportChannel = self.bot.get_channel(prevReport['channel_id'])
+
              # TODO: If overwrite then ask user if he wants to move all reports to that channel or keep it in the old channel.
-                # TODO: If move, only move it with an interval of 10 seconds to avoid api abuse (tell to user)
+                # TODO: If move, only move it with an interval of 5 seconds to avoid api abuse (tell to user)
                 # NOTE: If bot goes down while moving reports, handle it magically so that it starts moving the next time it goes up.
                 # NOTE: Handle stuff like if one of the channels get deleted.
 
@@ -142,10 +144,8 @@ To cancel click ❌.
                 await ui.embed(self, ctx, title="Success!", description=f"Successfully overwrote the report channel to {channel.mention}", color=ui.colors['green'])
             
             async def no():
-                await ui.embed(self, ctx, title="Canceled, Nothing has changed.", color=ui.colors['red'])
+                await ui.embed(self, ctx, title="Canceled, Nothing has changed.", color=ui.colors['red'], description=f"{prevReportChannel.mention} is still the current report channel.")
             
-            prevReport = db.report_channels.find_one({"guild_id": ctx.guild.id})
-            prevReportChannel = self.bot.get_channel(prevReport['channel_id'])
             reactions = {
                 "✅": yes,
                 "❌": no
@@ -167,7 +167,43 @@ To cancel click ❌.
             return await confirmation.start()
 
         db.report_channels.insert_one(data)
-        await ui.embed(self, ctx, title="Success!", description=f"Report channel successfully set to {channel.mention}", color=ui.colors['green'])
+        await ui.embed(self, ctx, title="Success!", description=f"Report channel successfully set to {channel.mention}. If you want to restore it back to a regular channel use the `{bot.getPrefix(ctx.guild, db)}restore_report_channel` command.", color=ui.colors['green'])
+    
+    @commands.command(description="Restores the report channel to just a regular channel. (This does not delete the channel)", usage="delete_report_channel")
+    @commands.has_permissions(manage_guild=True)
+    async def restore_report_channel(self, ctx):
+        # TODO : Test to see if it works
+        if db.report_channels.count_documents({"guild_id": ctx.guild.id}):
+            channelData = db.report_channels.find_one({"guild_id": ctx.guild.id})
+            channel = self.bot.get_channel(channelData['channel_id'])
+
+            async def yes():
+                db.report_channels.delete_one({"guild_id": ctx.guild.id})
+                await ui.embed(self, ctx, title="Success!", description=f"Successfully restored {channel.mention} to a regular channel.", color=ui.colors['green'])
+            
+            async def no():
+                await ui.embed(self, ctx, title="Canceled, Nothing has changed", description=f"{channel.mention} is still a report channel.", color=ui.colors['red'])
+            
+            reactions = {
+                "✅": yes,
+                "❌": no
+            }
+            confirmation = ui.reactionConfirmation(
+                self.bot, ctx, 
+                await ui.embed(
+                    self, ctx, send=False, color=ui.colors['red'],
+                    title="Are you sure you want to restore the current report channel to a regular channel?"
+                ),
+                reactions 
+            )
+            
+            return await confirmation.start()
+        
+        await ui.embed(
+            self, ctx, color=ui.colors['red'],
+            title="There is no report channel in this server.",
+            description=f"To set one use the `{bot.getPrefix(ctx.guild, db)}set_report_channel` command."
+        )
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
