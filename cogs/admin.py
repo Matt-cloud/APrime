@@ -98,7 +98,8 @@ class AdminStuff(commands.Cog):
     @commands.command(hidden=True, name="test", usage="test <new_name>")
     @checks.is_owner()
     async def testCommand(self, ctx):
-        await ui.properUsage(self, ctx, "test fucking idk")
+        e = await ui.embed(self, ctx, title="kek", send=False)
+        print(e.footer.text)
     
     @commands.command(name="eval", hidden="true")
     @checks.is_owner()

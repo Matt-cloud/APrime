@@ -45,7 +45,11 @@ class reactionConfirmation:
         self.timeout_content = kwargs.get("timeout_content", None)
 
     async def start(self):
-        content = parseContent(self.content)
+        content, contentType = parseContent(self.content)
+        if contentType == discord.embeds.Embed:
+            if content['embed'].footer.text.startswith(defaultFooter['text'].replace("//author//", "")):
+                content['embed'].set_footer(text="Use the buttons below to navigate", icon_url=content['embed'].footer.icon_url)
+
         message = await self.ctx.send(**content)
 
         for reaction in list(self.reactions.keys()):
@@ -69,17 +73,20 @@ class reactionConfirmation:
         except asyncio.TimeoutError:
             content = self.timeout_content
             if content:
-                content = parseContent(content)
+                content, contentType = parseContent(content)
                 await self.ctx.send(**content)
 
 def parseContent(c):
     if isinstance(c, discord.embeds.Embed):
         content = dict(embed=c)
+        contentType = discord.embeds.Embed
     elif isinstance(c, dict):
         content = c # You could also pass in your own dictionary
+        contentType = dict 
     else:
         content = dict(content=c)
-    return content
+        contentType = str
+    return content, contentType
 
 async def properUsage(self, ctx, example, send=True):
     fields = [
@@ -135,9 +142,10 @@ async def embed(self, ctx, title=None, description=None, url=None, fields=None, 
         icon = self.bot.user.avatar_url
         text = footer["text"].replace("//author//", f"{ctx.author.name}#{ctx.author.discriminator}")
 
-        if "//author.avatar//" in footer['icon']:
-            if ctx.author.avatar_url:
-                icon = ctx.author.avatar_url
+        if footer['icon']:
+            if "//author.avatar//" in footer['icon']:
+                if ctx.author.avatar_url:
+                    icon = ctx.author.avatar_url
         
         e.set_footer(text=text, icon_url=icon)
     

@@ -52,9 +52,9 @@ To cancel click ❌.
                     db.prefixes.update_one({"guild_id": data['guild_id']}, {"$set": data})
                     logger.log(loggerMessage)
 
-                    return await ui.embed(self, ctx, title="Successfully overwrote the server prefix.", description=description)
+                    return await ui.embed(self, ctx, title="Successfully overwrote the server prefix.", description=description, color=ui.colors['green'])
                 elif str(reaction.emoji) == "❌":
-                    return await ui.embed(self, ctx, title="Canceled, nothing has changed.")
+                    return await ui.embed(self, ctx, title="Canceled, nothing has changed.", color=ui.colors['red'])
             except asyncio.TimeoutError:
                 await ui.embed(self, ctx, title="Timeout, nothing has changed.", color=ui.colors['red'])
             return
@@ -62,7 +62,7 @@ To cancel click ❌.
         db.prefixes.insert_one(data)
         logger.log(loggerMessage)
 
-        await ui.embed(self, ctx, title="Successfully changed the server prefix.", description=allowPrefixMessage)
+        await ui.embed(self, ctx, title="Successfully changed the server prefix.", description=allowPrefixMessage, color=ui.colors['green'])
 
     @commands.command(description="Toggles the default prefix on and off for this server. (Can only be used if you have a custom prefix for this server)", usage="toggle_default_prefix")
     @commands.has_permissions(manage_guild=True)
@@ -74,7 +74,7 @@ To cancel click ❌.
         defaultPrefix = bot.getDefaultPrefix()
 
         if not prefixData:
-            return await ui.embed(self, ctx, title="You have to set a custom prefix for this server first before disabling the default prefix.", description=f"To set a custom a prefix simply use the `{prefix}set_custom_prefix` command.")
+            return await ui.embed(self, ctx, title="You have to set a custom prefix for this server first before disabling the default prefix.", description=f"To set a custom a prefix simply use the `{prefix}set_custom_prefix` command.", color=ui.colors['red'])
         
         newValue = not prefixData['allow_default_prefix']
         
@@ -86,7 +86,7 @@ To cancel click ❌.
         else:
             description = f"You can no longer use the default prefix `{defaultPrefix}`. You must use the custom prefix `{prefix}` in order to run commands."
 
-        await ui.embed(self, ctx, title="Successfully toggled the default prefix for this server.", description=description)
+        await ui.embed(self, ctx, title="Successfully toggled the default prefix for this server.", description=description, color=ui.colors['green'])
 
     @commands.command(description="Deletes the custom prefix. If you have the default prefix turned off this will automatically turn it on.", usage="delete_custom_prefix")
     @commands.has_permissions(manage_guild=True)
@@ -95,15 +95,15 @@ To cancel click ❌.
         defaultPrefix = bot.getDefaultPrefix()
 
         if not prefixData:
-            return await ui.embed(self, ctx, title="You have nothing to delete.", description=f"You haven't set a custom prefix yet, to do so use the `{defaultPrefix}set_custom_prefix` command.")
+            return await ui.embed(self, ctx, title="You have nothing to delete.", description=f"You haven't set a custom prefix yet, to do so use the `{defaultPrefix}set_custom_prefix` command.", color=ui.colors['red'])
 
         async def _continue():
             db.prefixes.delete_one({"guild_id": ctx.guild.id})
             logger.log(f"Server : {ctx.guild.id} has deleted its custom prefix.")
-            await ui.embed(self, ctx, title="Successfully deleted the custom prefix for this server.")
+            await ui.embed(self, ctx, title="Successfully deleted the custom prefix for this server.", color=ui.colors['green'])
         
         async def cancel():
-            await ui.embed(self, ctx, title="Canceled, nothing has changed.")
+            await ui.embed(self, ctx, title="Canceled, nothing has changed.", color=ui.colors['red'])
 
         reactions = {
             "✅": _continue,
@@ -120,6 +120,44 @@ To cancel click ❌.
     async def set_report_channel(self, ctx, channel: discord.TextChannel = None):
         if channel is None:
             return await ui.properUsage(self, ctx, f"set_report_channel {ctx.channel.mention}")
+        
+        if db.report_channels.count_documents({"guild_id": ctx.guild.id}):
+            async def yes():
+                print(1)
+            
+            async def no():
+                print(2)
+            
+            prevReport = db.report_channels.find_one({"guild_id": ctx.guild.id})
+            prevReportChannel = self.bot.get_channel(prevReport['channel_id'])
+            reactions = {
+                "✅": yes,
+                "❌": no
+            }
+            confirmation = ui.reactionConfirmation(
+                self.bot,
+                ctx,
+                await ui.embed(
+                    self,
+                    ctx,
+                    title="There's already a report channel set for this server.",
+                    description=f"The current report channel for this server is {prevReportChannel.mention}, Do you want to overwrite it?",
+                    color=ui.colors['red'],
+                    send=False
+                ),
+                reactions
+            )
+
+            return await confirmation.start()
+        
+        data = {
+            "channel_id": channel.id,
+            "set_by": ctx.author.id,
+            "guild_id": ctx.guild.id
+        }
+
+        db.report_channels.insert_one(data)
+        await ui.embed(self, ctx, title="Success!", description=f"Report channel successfully set to {channel.mention}", color=ui.colors['green'])
         
         # TODO: If report channel already exists then ask if wanna overwrite
             # TODO: If overwrite then ask user if he wants to move all reports to that channel or keep it in the old channel.
