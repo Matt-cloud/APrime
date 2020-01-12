@@ -121,12 +121,28 @@ To cancel click ❌.
         if channel is None:
             return await ui.properUsage(self, ctx, f"set_report_channel {ctx.channel.mention}")
         
+        data = {
+            "channel_id": channel.id,
+            "set_by": ctx.author.id,
+            "guild_id": ctx.guild.id
+        }
+
+        if db.report_channels.count_documents({"guild_id": ctx.guild.id, "channel_id": channel.id}):
+            return await ui.embed(self, ctx, title="That's already the report channel for this server.", color=ui.colors['red'])
+        
         if db.report_channels.count_documents({"guild_id": ctx.guild.id}):
+            
+             # TODO: If overwrite then ask user if he wants to move all reports to that channel or keep it in the old channel.
+                # TODO: If move, only move it with an interval of 10 seconds to avoid api abuse (tell to user)
+                # NOTE: If bot goes down while moving reports, handle it magically so that it starts moving the next time it goes up.
+                # NOTE: Handle stuff like if one of the channels get deleted.
+
             async def yes():
-                print(1)
+                db.report_channels.update_one({"guild_id": data['guild_id']}, {"$set": data})
+                await ui.embed(self, ctx, title="Success!", description=f"Successfully overwrote the report channel to {channel.mention}", color=ui.colors['green'])
             
             async def no():
-                print(2)
+                await ui.embed(self, ctx, title="Canceled, Nothing has changed.", color=ui.colors['red'])
             
             prevReport = db.report_channels.find_one({"guild_id": ctx.guild.id})
             prevReportChannel = self.bot.get_channel(prevReport['channel_id'])
@@ -149,24 +165,9 @@ To cancel click ❌.
             )
 
             return await confirmation.start()
-        
-        data = {
-            "channel_id": channel.id,
-            "set_by": ctx.author.id,
-            "guild_id": ctx.guild.id
-        }
 
         db.report_channels.insert_one(data)
         await ui.embed(self, ctx, title="Success!", description=f"Report channel successfully set to {channel.mention}", color=ui.colors['green'])
-        
-        # TODO: If report channel already exists then ask if wanna overwrite
-            # TODO: If overwrite then ask user if he wants to move all reports to that channel or keep it in the old channel.
-                # TODO: If move, only move it with an interval of 10 seconds to avoid api abuse (tell to user)
-                # NOTE: If bot goes down while moving reports, handle it magically so that it starts moving the next time it goes up.
-                # NOTE: Handle stuff like if one of the channels get deleted.
-
-        # TODO: else
-            # TODO : Add report channel to the database
 
 def setup(bot):
     bot.add_cog(Moderation(bot))

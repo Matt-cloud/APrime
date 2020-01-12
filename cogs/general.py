@@ -78,14 +78,46 @@ class General(commands.Cog):
         if user is None or reason is None:
             return await ui.properUsage(self, ctx, f"report {ctx.author.mention} reported for being too cool :)")
         
-        # TODO: If there is no report channel then cancel the process (return a message)
-        # TODO: If there is a report channel then send the report to that channel
+        if db.report_channels.count_documents({"guild_id": ctx.guild.id}):
+            channelData = db.report_channels.find_one({"guild_id": ctx.guild.id})
+            channel = self.bot.get_channel(channelData['channel_id'])
+            
+            reportData = { # Maybe store in database when database is upgraded
+                "user": user.id,
+                "reason": reason,
+                "report_by": ctx.author.id,
+                "report_date":  int(time.time()),
+                "report_from": {
+                    "channel_id": ctx.channel.id,
+                    "guild_id": ctx.guild.id,
+                    "jump_url": ctx.message.jump_url 
+                }
+            }
 
-        # NOTE: Template
-        # Date: (seperate from embed timestamp)
-        # Report by: ctx.author
-        # Reported member: user
-        # Reason: reason
+            report_embed = await ui.embed(
+                self, ctx, send=False, footer=None, thumbnail=user.avatar_url,
+                title=f"Report for {ui.discrim(user)} submitted by {ui.discrim(ctx.author)}",
+                fields=[
+                    {
+                        "Reason": reportData['reason']
+                    },
+                    {
+                        "Report Date": f"(UTC) {datetime.datetime.utcfromtimestamp(reportData['report_date']).strftime(ui.strftime)}"
+                    }
+                ],
+                description=f"""
+From channel : {self.bot.get_channel(reportData['report_from']['channel_id']).mention}
+From server : {self.bot.get_guild(reportData['report_from']['guild_id']).name}
+Jump Url : {reportData['report_from']['jump_url']}
+"""
+            )
+            await channel.send(embed=report_embed)
+            await ui.embed(self, ctx, title=f"A report for {ui.discrim(user)} has been successfully submitted.", description=reason, color=ui.colors['green'], thumbnail=user.avatar_url)
+            return
+        
+        await ui.embed(self, ctx, title="No report channel for this server", description=f"In order to report users that are violating the rules of the server, a server moderator must first set a report channel using the `{bot.getPrefix(ctx.guild, db)}set_report_channel` where reports will be sent to.", color=ui.colors['red'])
+        
+        # TODO : Add message if trying to report self
 
 def setup(bot):
     bot.add_cog(General(bot))

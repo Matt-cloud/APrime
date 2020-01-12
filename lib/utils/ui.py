@@ -34,6 +34,8 @@ defaultFooter = {
     "icon": "//author.avatar//"
 }
 
+strftime = "%b %m, %Y at %I:%M %p"
+
 class reactionConfirmation:
     def __init__(self, bot, ctx, content, reactions, **kwargs):
         self.reactions = reactions
@@ -87,6 +89,9 @@ def parseContent(c):
         content = dict(content=c)
         contentType = str
     return content, contentType
+
+def discrim(c):
+    return f"{c.name}#{c.discriminator}"
 
 async def properUsage(self, ctx, example, send=True):
     fields = [
