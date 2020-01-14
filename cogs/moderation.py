@@ -67,7 +67,6 @@ To cancel click ❌.
     @commands.command(description="Toggles the default prefix on and off for this server. (Can only be used if you have a custom prefix for this server)", usage="toggle_default_prefix")
     @commands.has_permissions(manage_guild=True)
     async def toggle_default_prefix(self, ctx):
-        # TODO Add confirmation before toggling 
         prefixData = db.prefixes.find_one({"guild_id": ctx.guild.id})
 
         prefix = bot.getPrefix(ctx.guild, db)
@@ -172,7 +171,6 @@ To cancel click ❌.
     @commands.command(description="Restores the report channel to just a regular channel. (This does not delete the channel)", usage="delete_report_channel")
     @commands.has_permissions(manage_guild=True)
     async def restore_report_channel(self, ctx):
-        # TODO : Test to see if it works
         if db.report_channels.count_documents({"guild_id": ctx.guild.id}):
             channelData = db.report_channels.find_one({"guild_id": ctx.guild.id})
             channel = self.bot.get_channel(channelData['channel_id'])

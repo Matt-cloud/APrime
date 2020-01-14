@@ -5,6 +5,7 @@ from lib.utils import bot
 from lib.utils import checks
 from disputils import BotEmbedPaginator
 from discord.ext import ui as dpui
+from bs4 import BeautifulSoup
 
 import discord
 import aiohttp 

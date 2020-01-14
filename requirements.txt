@@ -17,3 +17,6 @@ favicon
 # VSCODE
 pylint
 autopep8
+
+# Web Scraping
+BeautifulSoup4

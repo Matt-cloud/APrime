@@ -77,6 +77,13 @@ class General(commands.Cog):
     async def report(self, ctx, user: discord.Member = None, *, reason: str = None):
         if user is None or reason is None:
             return await ui.properUsage(self, ctx, f"report {ctx.author.mention} reported for being too cool :)")
+
+        if user == ctx.author:
+            return await ui.embed(
+                self, ctx,
+                title="I wouldn't report my self if I were you.",
+                color=ui.colors['red']
+            )
         
         if db.report_channels.count_documents({"guild_id": ctx.guild.id}):
             channelData = db.report_channels.find_one({"guild_id": ctx.guild.id})
@@ -116,8 +123,16 @@ Jump Url : {reportData['report_from']['jump_url']}
             return
         
         await ui.embed(self, ctx, title="No report channel for this server", description=f"In order to report users that are violating the rules of the server, a server moderator must first set a report channel using the `{bot.getPrefix(ctx.guild, db)}set_report_channel` where reports will be sent to.", color=ui.colors['red'])
+    
+    @commands.command(description="Returns a link for your google query.", usage="google <query>")
+    async def google(self, ctx, *, query: str = None):
+        if query is None:
+            return await ui.properUsage(self, ctx, "google Top 10 stuff")
         
-        # TODO : Add message if trying to report self
+        url = "https://google.com/search?q=" + query 
+        await ui.embed(self, ctx, title="Here is your query.", description=url, thumbnail="https://cdn4.iconfinder.com/data/icons/new-google-logo-2015/400/new-google-favicon-512.png")
+    
+    # TODO : Implement findareddit command, check reddit.py in tests folder for more info
 
 def setup(bot):
     bot.add_cog(General(bot))
