@@ -110,6 +110,10 @@ async def properUsage(self, ctx, example, send=True):
         return await ctx.send(embed=e)
     return e
 
+async def loadingEmbed(self, ctx, title="Please wait...", description="Loading data", send=True):
+    url = "https://storage.googleapis.com/discordstreet/emojis/loading.gif"
+    return await embed(self, ctx, title=title, description=description, send=send, thumbnail=url)
+
 async def embed(self, ctx, title=None, description=None, url=None, fields=None, color=None, thumbnail=None, image=None, footer=defaultFooter, showTimeStamp=True, send=True):
     if type(title) is dict:
         e = Embed.from_dict(title)

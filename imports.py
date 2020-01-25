@@ -1,5 +1,5 @@
 from discord.ext import commands 
-from lib.utils.globals import logger, db
+from lib.utils.globals import logger, db, reddit
 from lib.utils import ui
 from lib.utils import bot 
 from lib.utils import checks

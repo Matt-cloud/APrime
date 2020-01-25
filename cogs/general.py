@@ -129,10 +129,8 @@ Jump Url : {reportData['report_from']['jump_url']}
         if query is None:
             return await ui.properUsage(self, ctx, "google Top 10 stuff")
         
-        url = "https://google.com/search?q=" + query 
+        url = "https://google.com/search?q=" + query.replace(" ", "+")
         await ui.embed(self, ctx, title="Here is your query.", description=url, thumbnail="https://cdn4.iconfinder.com/data/icons/new-google-logo-2015/400/new-google-favicon-512.png")
-    
-    # TODO : Implement findareddit command, check reddit.py in tests folder for more info
 
 def setup(bot):
     bot.add_cog(General(bot))
