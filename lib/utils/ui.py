@@ -139,11 +139,12 @@ async def embed(self, ctx, title=None, description=None, url=None, fields=None, 
     if showTimeStamp:
         e.timestamp = datetime.datetime.now()
     
-    if thumbnail:
-        e.set_thumbnail(url=thumbnail)
-    else:
-        e.set_thumbnail(url=self.bot.user.avatar_url)
-
+    if thumbnail != 0:
+        if thumbnail:
+            e.set_thumbnail(url=thumbnail)
+        else:
+            e.set_thumbnail(url=self.bot.user.avatar_url)
+    
     if image:
         e.set_image(url=image)
 

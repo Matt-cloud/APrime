@@ -80,9 +80,22 @@ class RedditCommands(commands.Cog):
 
         await ui.embed(self, ctx, title=title, description=description, thumbnail="https://cdn3.iconfinder.com/data/icons/2018-social-media-logotypes/1000/2018_social_media_popular_app_logo_reddit-512.png", fields=fields)
     
-    @commands.command(aliases=['memes', 'dankmemes', 'meme'])
+    @commands.command(alias=['memes', 'dankmemes', 'me_irl', 'meirl'])
     async def meme(self, ctx):
-        pass
+        if not db.memes.count_documents({}):
+            return await ui.embed(self, ctx, title="Memes out of stock", description="Just visit [reddit](https://reddit.com) dude.", color=ui.colors['red'])
+            
+        aggregate_opts = [
+            {"$sample": {"size": 1}}
+        ]
+        if not ctx.channel.is_nsfw():
+            aggregate_opts.append(
+                {"$match": {"nsfw": False}}
+            )
+        
+        for r in db.memes.aggregate(aggregate_opts):
+            data = r
+        await ui.embed(self, ctx, title=data['title'], url=data['shortlink'], image=data['url'], thumbnail=0)
 
 def setup(bot):
     bot.add_cog(RedditCommands(bot))

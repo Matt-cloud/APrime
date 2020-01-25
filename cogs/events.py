@@ -8,6 +8,7 @@ class Events(commands.Cog):
         self.bot = bot 
         self.commonErrors = (discord.HTTPException)
         self.ignoredErrors = (commands.CommandNotFound)
+        self.bot.loop.create_task(self.meme_finder())
     
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -35,6 +36,31 @@ class Events(commands.Cog):
             logger.log(fullTB, level="error")
 
         await ui.embed(self, ctx, color=ui.colors['red'], **p)
+    
+    async def meme_finder(self):
+        while True:
+            subreddits = db.config.find_one({"foo": "bar"})['meme_subreddits']
+            subreddits_string = "+".join(subreddits)
+
+            for post in reddit.subreddit(subreddits_string).top("month"):
+                if not db.memes.count_documents({"id": post.id}):
+                    try:
+                        data = {
+                            "url": post.url,
+                            "shortlink": post.shortlink,
+                            "title": post.title,
+                            "id": post.id,
+                            "author": post.author.name,
+                            "timestamp": int(time.time()),
+                            "nsfw": post.over_18,
+                            "requested_by": []
+                        }
+                        db.memes.insert_one(data)
+                    except:
+                        pass
+                await asyncio.sleep(1.5)
+
+            await asyncio.sleep(5)
     
 def setup(bot):
     bot.add_cog(Events(bot))
