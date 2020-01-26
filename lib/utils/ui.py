@@ -153,6 +153,7 @@ async def embed(self, ctx, title=None, description=None, url=None, fields=None, 
         text = footer["text"].replace("//author//", f"{ctx.author.name}#{ctx.author.discriminator}")
 
         if footer['icon']:
+            icon = footer['icon']
             if "//author.avatar//" in footer['icon']:
                 if ctx.author.avatar_url:
                     icon = ctx.author.avatar_url

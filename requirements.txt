@@ -20,3 +20,6 @@ autopep8
 
 # Web Scraping
 BeautifulSoup4
+
+# APIS
+praw

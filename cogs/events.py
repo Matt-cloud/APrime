@@ -9,7 +9,8 @@ class Events(commands.Cog):
         self.commonErrors = (discord.HTTPException)
         self.ignoredErrors = (commands.CommandNotFound)
         self.bot.loop.create_task(self.meme_finder())
-    
+        self.bot.loop.create_task(self.dadjoke_finder())
+
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
 
@@ -37,13 +38,20 @@ class Events(commands.Cog):
 
         await ui.embed(self, ctx, color=ui.colors['red'], **p)
     
+    async def clean_database(self):
+        while True:
+            for item in db.dadjokes.find({}):
+                pass 
+
+            await asyncio.sleep(100)
+    
     async def meme_finder(self):
         while True:
             subreddits = db.config.find_one({"foo": "bar"})['meme_subreddits']
             subreddits_string = "+".join(subreddits)
 
-            for post in reddit.subreddit(subreddits_string).top("month"):
-                if not db.memes.count_documents({"id": post.id}):
+            for post in reddit.subreddit(subreddits_string).hot():
+                if not db.memes.count_documents({"id": post.id}) and not post.url.startswith("https://v.re"):
                     try:
                         data = {
                             "url": post.url,
@@ -56,10 +64,40 @@ class Events(commands.Cog):
                             "requested_by": []
                         }
                         db.memes.insert_one(data)
-                    except:
+                        logger.log(f"New Meme Added : {data['id']}", level="info")
+                    except praw.exceptions.APIException as e:
+                        logger.log("Error with the reddit API", level="error")
+                    except AttributeError:
                         pass
                 await asyncio.sleep(1.5)
 
+            await asyncio.sleep(5)
+    
+    async def dadjoke_finder(self):
+        while True:
+            subreddit = reddit.subreddit("dadjokes")
+
+            for submission in subreddit.hot():
+                if not db.dadjokes.count_documents({"id": submission.id}) and submission.selftext != "":
+                    try:
+                        data = {
+                            "shortlink": submission.shortlink,
+                            "title": submission.title,
+                            "selftext": submission.selftext,
+                            "author": submission.author.name,
+                            "timestamp": int(time.time()),
+                            "id": submission.id,
+                            "verified": False,
+                            "requested_by": []
+                        }
+                        db.dadjokes.insert_one(data)
+                        logger.log(f"New Dad Joke Added : {data['id']}", level="info")
+                    except praw.exceptions.APIException as e:
+                        logger.log("Error with the reddit API", level="error")
+                    except AttributeError:
+                        pass
+
+                await asyncio.sleep(1.5)
             await asyncio.sleep(5)
     
 def setup(bot):

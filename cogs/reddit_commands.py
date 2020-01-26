@@ -95,7 +95,32 @@ class RedditCommands(commands.Cog):
         
         for r in db.memes.aggregate(aggregate_opts):
             data = r
-        await ui.embed(self, ctx, title=data['title'], url=data['shortlink'], image=data['url'], thumbnail=0)
+        
+        author = reddit.redditor(name=data['author'])
+
+        footer = {
+            "text": f"Meme by : u/{author.name}",
+            "icon": author.icon_img
+        }
+
+        await ui.embed(self, ctx, title=data['title'], url=data['shortlink'], image=data['url'], thumbnail=0, footer=footer)
+    
+    @commands.command()
+    async def dadjoke(self, ctx):
+        if not db.dadjokes.count_documents({}):
+            return await ui.embed(self, ctx, title="Dad jokes out of stock.", color=ui.colors['red'])
+        
+        for r in db.dadjokes.aggregate([{"$sample": {"size": 1}}]):
+            data = r    
+        
+        author = reddit.redditor(data['author'])
+
+        footer = {
+            "text": f"Dad Joke by : u/{author.name}",
+            "icon": author.icon_img
+        }
+
+        await ui.embed(self, ctx, title=data['title'], description=data['selftext'], footer=footer)
 
 def setup(bot):
     bot.add_cog(RedditCommands(bot))

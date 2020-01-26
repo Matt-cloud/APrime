@@ -73,7 +73,10 @@ class Bot(commands.Bot):
         self.remove_command("help")
         self.app_info = await self.application_info()
         x = self.app_info
+
         customPrefixes = db.prefixes.count_documents({})
+        savedMemes = db.memes.count_documents({})
+
         ui = f"""
 # Discord.py Version : {discord.__version__}
 # Name : {x.name}
@@ -81,6 +84,7 @@ class Bot(commands.Bot):
 # Owner : {x.owner}
 # Default Prefix : {self.config['prefix']}
 # {customPrefixes} custom prefix{'s' if customPrefixes > 1 else ''}
+# {savedMemes} saved meme{'s' if savedMemes > 1 else ''}
 """
         logger.log(ui)
 
