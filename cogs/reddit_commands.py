@@ -103,6 +103,8 @@ class RedditCommands(commands.Cog):
             "icon": author.icon_img
         }
 
+        # TODO: Do something with the requested by
+
         await ui.embed(self, ctx, title=data['title'], url=data['shortlink'], image=data['url'], thumbnail=0, footer=footer)
     
     @commands.command()

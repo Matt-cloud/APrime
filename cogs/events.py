@@ -10,6 +10,7 @@ class Events(commands.Cog):
         self.ignoredErrors = (commands.CommandNotFound)
         self.bot.loop.create_task(self.meme_finder())
         self.bot.loop.create_task(self.dadjoke_finder())
+        self.bot.loop.create_task(self.clean_database())
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -41,7 +42,18 @@ class Events(commands.Cog):
     async def clean_database(self):
         while True:
             for item in db.dadjokes.find({}):
-                pass 
+                if item['selftext'].strip() == "":
+                    item_id = item['id']
+                    db.dadjokes.delete_one({"id": item_id})
+
+                    logger.log(f"Deleted dad joke {item_id} for empty punchline.")
+            
+            for item in db.memes.find({}):
+                if item['url'].startswith("https://v.re"):
+                    item_id = item['id']
+                    db.memes.delete_one({"id": item_id})
+
+                    logger.log(f"Deleted meme {item_id} for being a video.")
 
             await asyncio.sleep(100)
     
@@ -78,7 +90,7 @@ class Events(commands.Cog):
             subreddit = reddit.subreddit("dadjokes")
 
             for submission in subreddit.hot():
-                if not db.dadjokes.count_documents({"id": submission.id}) and submission.selftext != "":
+                if not db.dadjokes.count_documents({"id": submission.id}) and submission.selftext.strip() != "":
                     try:
                         data = {
                             "shortlink": submission.shortlink,
