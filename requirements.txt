@@ -23,3 +23,7 @@ BeautifulSoup4
 
 # APIS
 praw
+
+# Chatbot
+ChatterBot
+chatterbot_corpus
