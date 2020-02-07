@@ -7,7 +7,7 @@ config = os.path.join(os.getcwd(), os.pardir, "data", "config.json")
 
 with open(config) as f:
     r = json.load(f)
-    uri = r['database']['connection_string']
+    uri = r['database']['connection_string'].replace("/test", "/aprime")
 
 bot = ChatBot(
     "Dimitri",

@@ -19,10 +19,8 @@ class Moderation(commands.Cog):
         data = {
             "guild_id": ctx.guild.id,
             "prefix": new_prefix,
-            "set_by": ctx.author.id,
-            "set_in_channel": ctx.channel.id,
-            "set_at": int(time.time()),
-            "allow_default_prefix": True
+            "allow_default_prefix": True,
+            "additional_data": ui.ctxAdditonalData(ctx)
         }
 
         if db.prefixes.count_documents({"guild_id": ctx.guild.id}):
@@ -122,8 +120,8 @@ To cancel click ❌.
         
         data = {
             "channel_id": channel.id,
-            "set_by": ctx.author.id,
-            "guild_id": ctx.guild.id
+            "guild_id": ctx.guild.id,
+            "additional_data": ui.ctxAdditonalData(ctx)
         }
 
         if db.report_channels.count_documents({"guild_id": ctx.guild.id, "channel_id": channel.id}):
@@ -202,6 +200,92 @@ To cancel click ❌.
             title="There is no report channel in this server.",
             description=f"To set one use the `{bot.getPrefix(ctx.guild, db)}set_report_channel` command."
         )
+    
+    @commands.command(description="A chatbot channel let's you talk to a 'machine learning' powered chatbot that responds like a human.", usage="set_chatbot_channel <mention a channel>")
+    @commands.has_permissions(manage_guild=True)
+    async def set_chatbot_channel(self, ctx, channel: discord.TextChannel = None):
+
+        delete_old = False 
+
+        if channel is None:
+            return await ui.properUsage(self, ctx, f"set_chatbot_channel {ctx.channel.mention}")
+        
+        if db.chatbots.count_documents({"guild_id": ctx.guild.id}):
+
+            channel_id = db.chatbots.find_one({"guild_id": ctx.guild.id})['channel_id']
+            channel_old = ctx.guild.get_channel(int(channel_id))
+
+            if channel_old:
+
+                async def yes():
+                    db.chatbots.update_one({"guild_id": ctx.guild.id}, {"$set": {"channel_id": channel.id}})
+                    await ui.embed(self, ctx, description=f"Successfully replaced the old chatbot channel with {channel.mention}", color=ui.colors['green'])
+                    
+                async def no():
+                    await ui.embed(self, ctx, title="Canceled, Nothing has changed.", color=ui.colors['red'])
+                
+                reactions = {
+                    "✅": yes,
+                    "❌": no
+                }
+
+                confirmation = ui.reactionConfirmation(
+                    self.bot, ctx, 
+                    await ui.embed(
+                        self, ctx, send=False, color=ui.colors['red'],
+                        title="This server already has a chatbot channel, Do you want to replace it?",
+                        description=f"The current chatbot channel for this server is {channel_old.mention}"
+                    ),
+                    reactions 
+                )
+                return await confirmation.start()
+            else:
+                delete_old = True
+        
+        if delete_old:
+            db.chatbots.delete_many({"guild_id": ctx.guild.id})
+
+        data = {
+            "guild_id": ctx.guild.id,
+            "channel_id": channel.id,
+            "additional_data": ui.ctxAdditonalData(ctx)
+        }
+
+        db.chatbots.insert_one(data)
+
+        await ui.embed(
+            self, ctx, color=ui.colors['green'],
+            description=f"Successfully set the chatbot channel to {channel.mention}"
+        )
+    
+    @commands.command(description="Restores the chatbot channel back to a regular channel. (This does not delete the channel)", usage="restore_chatbot_channel")
+    @commands.has_permissions(manage_guild=True)
+    async def restore_chatbot_channel(self, ctx):
+        if not db.chatbots.count_documents({"guild_id": ctx.guild.id}):
+            return await ui.embed(self, ctx, title="There is no chatbot channel in this server.", description=f"To set one use the `{bot.getPrefix(ctx.guild, db)}set_chatbot_channel` command.", color=ui.colors['red'])
+        
+        async def yes():
+            db.chatbots.delete_many({"guild_id": ctx.guild.id})
+            await ui.embed(self, ctx, title="Successfully deleted the chatbot channel.", color=ui.colors['green'])
+            
+        async def no():
+            await ui.embed(self, ctx, title="Canceled, Nothing has changed.", color=ui.colors['red'])
+        
+        reactions = {
+            "✅": yes,
+            "❌": no
+        }
+
+        confirmation = ui.reactionConfirmation(
+            self.bot, ctx,
+            await ui.embed(
+                self, ctx, send=False, color=ui.colors['red'],
+                title="Are you sure you want to restore the chatbot channel back to a regular channel?"
+            ),
+            reactions
+        )
+
+        await confirmation.start()
 
 def setup(bot):
     bot.add_cog(Moderation(bot))

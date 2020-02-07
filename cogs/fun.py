@@ -4,7 +4,7 @@ class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=['dice'])
+    @commands.command(aliases=['dice'], description="Rolls the dice", usage="rolladice")
     async def rolladice(self, ctx):
         dice = random.randint(1, 6)
         fp = f"dice{dice}.gif"

@@ -5,6 +5,7 @@ from lib.utils.globals import db
 import discord 
 import datetime
 import random
+import time
 import asyncio
 
 colors = {
@@ -92,6 +93,34 @@ def parseContent(c):
 
 def discrim(c):
     return f"{c.name}#{c.discriminator}"
+
+def ctxAdditonalData(ctx):
+    data = {
+        "content": ctx.message.content,
+        "prefix": ctx.prefix,
+        "invoked_with": ctx.invoked_with,
+        "timestamp": int(time.time()),
+        "channel": None,
+        "guild": None,
+        "author": {
+            "id": ctx.author.id,
+            "name": ctx.author.name,
+            "discriminator": ctx.author.discriminator
+        }
+    }
+
+    if isinstance(ctx.channel, discord.TextChannel):
+        data['channel'] = {
+            "id": ctx.channel.id,
+            "name": ctx.channel.name
+        }
+
+        data['guild'] = {
+            "id": ctx.guild.id,
+            "name": ctx.guild.name
+        }
+    
+    return data
 
 async def properUsage(self, ctx, example, send=True):
     fields = [
