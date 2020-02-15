@@ -27,3 +27,6 @@ praw
 # Chatbot
 ChatterBot
 chatterbot_corpus
+
+# Reading Stuff
+pandas

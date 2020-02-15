@@ -4,7 +4,8 @@
     "description": "",
     "database": {
         "user": "",
-        "password": ""
+        "password": "",
+        "connection_string": ""
     },
     "apis": {
         "reddit": {
