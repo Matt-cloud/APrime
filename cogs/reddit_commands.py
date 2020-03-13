@@ -84,18 +84,28 @@ class RedditCommands(commands.Cog):
     async def meme(self, ctx):
         if not db.memes.count_documents({}):
             return await ui.embed(self, ctx, title="Memes out of stock", description="Just visit [reddit](https://reddit.com) dude.", color=ui.colors['red'])
-            
+        
+        nsfw = ctx.channel.is_nsfw()
+
         aggregate_opts = [
-            {"$sample": {"size": 1}}
+            {"$sample": {"size": 120}}
         ]
-        if not ctx.channel.is_nsfw():
+
+        if not nsfw:
             aggregate_opts.append(
                 {"$match": {"nsfw": False}}
             )
+
+        memes = db.memes.aggregate(aggregate_opts)
+        newMemes = []
+
+        for meme in memes:
+            requesters = [r for r in meme['requested_by'] if r['id'] == ctx.author.id]
         
-        for r in db.memes.aggregate(aggregate_opts):
-            data = r
-        
+            if len(requesters) == 0:
+                newMemes.append(meme)
+
+        data = random.choice(newMemes)
         author = reddit.redditor(name=data['author'])
 
         footer = {
@@ -103,7 +113,13 @@ class RedditCommands(commands.Cog):
             "icon": author.icon_img
         }
 
-        # TODO: Do something with the requested by
+        requested_by = {
+            "id": ctx.author.id,
+            "timestamp": int(time.time())
+        }
+
+        logger.log(data['id'], level="debug")
+        db.memes.update_one({"id": data['id']}, {"$push": {"requested_by": requested_by}})
 
         await ui.embed(self, ctx, title=data['title'], url=data['shortlink'], image=data['url'], thumbnail=0, footer=footer)
     
@@ -112,15 +128,34 @@ class RedditCommands(commands.Cog):
         if not db.dadjokes.count_documents({}):
             return await ui.embed(self, ctx, title="Dad jokes out of stock.", color=ui.colors['red'])
         
-        for r in db.dadjokes.aggregate([{"$sample": {"size": 1}}]):
-            data = r    
+        aggregate_opts = [
+            {"$sample": {"size": 120}}
+        ]
+
+        dadjokes = db.dadjokes.aggregate(aggregate_opts)
+        newDadjokes = []
+
+        for dadjoke in dadjokes:
+            requesters = [r for r in dadjoke['requested_by'] if r['id'] == ctx.author.id]
         
+            if len(requesters) == 0:
+                newDadjokes.append(dadjoke)
+        
+        data = random.choice(newDadjokes)
         author = reddit.redditor(data['author'])
 
         footer = {
             "text": f"Dad Joke by : u/{author.name}",
             "icon": author.icon_img
         }
+
+        requested_by = {
+            "id": ctx.author.id,
+            "timestamp": int(time.time())
+        }
+
+        logger.log(data['id'], level="debug")
+        db.dadjokes.update_one({"id": data['id']}, {"$push": {"requested_by": requested_by}})
 
         await ui.embed(self, ctx, title=data['title'], description=data['selftext'], footer=footer)
 

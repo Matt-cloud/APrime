@@ -153,6 +153,12 @@ async def embed(self, ctx, title=None, description=None, url=None, fields=None, 
     if not color:
         color = colors[random.choice(list(colors.keys()))]
 
+    if len(title) >= 256:
+        title = title[0:250] + "..."
+    
+    if len(description) > 2048:
+        description = description[0:2040] + "..."
+
     e = Embed(title=title, description=description, url=url, color=color)
 
     if type(fields) is list:

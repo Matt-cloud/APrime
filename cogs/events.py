@@ -11,6 +11,7 @@ class Events(commands.Cog):
         self.bot.loop.create_task(self.meme_finder())
         self.bot.loop.create_task(self.dadjoke_finder())
         self.bot.loop.create_task(self.clean_database())
+        self.bot.loop.create_task(self.clean_requested_by())
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -56,6 +57,41 @@ class Events(commands.Cog):
                     logger.log(f"Deleted meme {item_id} for being a video.")
 
             await asyncio.sleep(100)
+    
+    async def clean_requested_by(self):
+        # PLEASE FUCKING CHECK LOL IT'S POORLY WRITTEN
+        while True:
+            for item in db.memes.find({}):
+
+                change = False
+                toDelete = []
+
+                if item['requested_by']:
+                    for i, r in enumerate(item['requested_by']):
+                        if int(time.time()) - r['timestamp'] >= 1: # TODO: Replace with 129600
+                            logger.log(f"Deleted requested by {r['id']} in meme {item['id']}")
+                            del item['requested_by'][i]
+                            change = True
+
+                if change:
+                    db.memes.update_one({"id": item['id']}, {"$set": item})
+            
+            for item in db.dadjokes.find({}):
+
+                change = False
+                toDelete = []
+
+                if item['requested_by']:
+                    for i, r in enumerate(item['requested_by']):
+                        if int(time.time()) - r['timestamp'] >= 1: # TODO: Replace with 129600
+                            logger.log(f"Deleted requested by {r['id']} in dadjoke {item['id']}")
+                            del item['requested_by'][i]
+                            change = True
+
+                if change:
+                    db.dadjokes.update_one({"id": item['id']}, {"$set": item})
+
+            await asyncio.sleep(200)
     
     async def meme_finder(self):
         while True:
