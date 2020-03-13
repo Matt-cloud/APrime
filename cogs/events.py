@@ -68,7 +68,7 @@ class Events(commands.Cog):
 
                 if item['requested_by']:
                     for i, r in enumerate(item['requested_by']):
-                        if int(time.time()) - r['timestamp'] >= 1: # TODO: Replace with 129600
+                        if int(time.time()) - r['timestamp'] >= 129600:
                             logger.log(f"Deleted requested by {r['id']} in meme {item['id']}")
                             del item['requested_by'][i]
                             change = True
@@ -83,7 +83,7 @@ class Events(commands.Cog):
 
                 if item['requested_by']:
                     for i, r in enumerate(item['requested_by']):
-                        if int(time.time()) - r['timestamp'] >= 1: # TODO: Replace with 129600
+                        if int(time.time()) - r['timestamp'] >= 129600:
                             logger.log(f"Deleted requested by {r['id']} in dadjoke {item['id']}")
                             del item['requested_by'][i]
                             change = True
