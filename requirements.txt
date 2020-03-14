@@ -8,7 +8,7 @@ colorama
 termcolor
 
 # Database
-pymongo
+motor
 dnspython
 
 # Misc

@@ -12,8 +12,6 @@ with open(config) as f:
 
 bot = ChatBot(
     "Dimitri",
-    storage_adapter="chatterbot.storage.MongoDatabaseAdapter",
-    database_uri=uri,
     logic_adapters=[
         'chatterbot.logic.BestMatch'
     ]

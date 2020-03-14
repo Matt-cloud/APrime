@@ -38,7 +38,7 @@ class Logger:
         self.defaultLevel = defaultLevel
         self.fileLogLevel = fileLogLevel
     
-    def log(self, message, color=None, level=None, showError=True):
+    async def log(self, message, color=None, level=None, showError=True):
         global lastLog
 
         if not level:
@@ -90,4 +90,4 @@ class Logger:
                 }
 
                 if self.database:
-                    self.database.logs.insert_one(data)
+                    await self.database.logs.insert_one(data)

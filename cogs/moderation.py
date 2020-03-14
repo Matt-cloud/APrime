@@ -23,8 +23,8 @@ class Moderation(commands.Cog):
             "additional_data": ui.ctxAdditonalData(ctx)
         }
 
-        if db.prefixes.count_documents({"guild_id": ctx.guild.id}):
-            oldPrefixData = db.prefixes.find_one({"guild_id": ctx.guild.id})
+        if await db.prefixes.count_documents({"guild_id": ctx.guild.id}):
+            oldPrefixData = await db.prefixes.find_one({"guild_id": ctx.guild.id})
             myEmbed = await ui.embed(self, ctx, title=f"This server already has a custom  prefix.", description=f"""
 Custom Prefix : `{oldPrefixData['prefix']}`
 
@@ -47,8 +47,8 @@ To cancel click ❌.
                     if oldPrefixData['allow_default_prefix']:
                         description = allowPrefixMessage
                     
-                    db.prefixes.update_one({"guild_id": data['guild_id']}, {"$set": data})
-                    logger.log(loggerMessage)
+                    await db.prefixes.update_one({"guild_id": data['guild_id']}, {"$set": data})
+                    await logger.log(loggerMessage)
 
                     return await ui.embed(self, ctx, title="Successfully overwrote the server prefix.", description=description, color=ui.colors['green'])
                 elif str(reaction.emoji) == "❌":
@@ -57,17 +57,17 @@ To cancel click ❌.
                 await ui.embed(self, ctx, title="Timeout, nothing has changed.", color=ui.colors['red'])
             return
 
-        db.prefixes.insert_one(data)
-        logger.log(loggerMessage)
+        await db.prefixes.insert_one(data)
+        await logger.log(loggerMessage)
 
         await ui.embed(self, ctx, title="Successfully changed the server prefix.", description=allowPrefixMessage, color=ui.colors['green'])
 
     @commands.command(description="Toggles the default prefix on and off for this server. (Can only be used if you have a custom prefix for this server)", usage="toggle_default_prefix")
     @commands.has_permissions(manage_guild=True)
     async def toggle_default_prefix(self, ctx):
-        prefixData = db.prefixes.find_one({"guild_id": ctx.guild.id})
+        prefixData = await db.prefixes.find_one({"guild_id": ctx.guild.id})
 
-        prefix = bot.getPrefix(ctx.guild, db)
+        prefix = await bot.getPrefix(ctx.guild, db)
         defaultPrefix = bot.getDefaultPrefix()
 
         if not prefixData:
@@ -75,8 +75,8 @@ To cancel click ❌.
         
         newValue = not prefixData['allow_default_prefix']
         
-        db.prefixes.update_one({"guild_id": ctx.guild.id}, {"$set": {"allow_default_prefix": newValue}})
-        logger.log(f"Server : {ctx.guild.id} has changed its allow_default_prefix to : {newValue}")
+        await db.prefixes.update_one({"guild_id": ctx.guild.id}, {"$set": {"allow_default_prefix": newValue}})
+        await logger.log(f"Server : {ctx.guild.id} has changed its allow_default_prefix to : {newValue}")
 
         if newValue:
             description = f"You can once again use the default prefix `{defaultPrefix}` in this server while still being able to use the custom prefix `{prefix}`."
@@ -88,15 +88,15 @@ To cancel click ❌.
     @commands.command(description="Deletes the custom prefix. If you have the default prefix turned off this will automatically turn it on.", usage="delete_custom_prefix")
     @commands.has_permissions(manage_guild=True)
     async def delete_custom_prefix(self, ctx):
-        prefixData = db.prefixes.find_one({"guild_id": ctx.guild.id})
+        prefixData = await db.prefixes.find_one({"guild_id": ctx.guild.id})
         defaultPrefix = bot.getDefaultPrefix()
 
         if not prefixData:
             return await ui.embed(self, ctx, title="You have nothing to delete.", description=f"You haven't set a custom prefix yet, to do so use the `{defaultPrefix}set_custom_prefix` command.", color=ui.colors['red'])
 
         async def _continue():
-            db.prefixes.delete_one({"guild_id": ctx.guild.id})
-            logger.log(f"Server : {ctx.guild.id} has deleted its custom prefix.")
+            await db.prefixes.delete_one({"guild_id": ctx.guild.id})
+            await logger.log(f"Server : {ctx.guild.id} has deleted its custom prefix.")
             await ui.embed(self, ctx, title="Successfully deleted the custom prefix for this server.", color=ui.colors['green'])
         
         async def cancel():
@@ -124,11 +124,11 @@ To cancel click ❌.
             "additional_data": ui.ctxAdditonalData(ctx)
         }
 
-        if db.report_channels.count_documents({"guild_id": ctx.guild.id, "channel_id": channel.id}):
+        if await db.report_channels.count_documents({"guild_id": ctx.guild.id, "channel_id": channel.id}):
             return await ui.embed(self, ctx, title="That's already the report channel for this server.", color=ui.colors['red'])
         
-        if db.report_channels.count_documents({"guild_id": ctx.guild.id}):
-            prevReport = db.report_channels.find_one({"guild_id": ctx.guild.id})
+        if await db.report_channels.count_documents({"guild_id": ctx.guild.id}):
+            prevReport = await db.report_channels.find_one({"guild_id": ctx.guild.id})
             prevReportChannel = self.bot.get_channel(prevReport['channel_id'])
 
              # TODO: If overwrite then ask user if he wants to move all reports to that channel or keep it in the old channel.
@@ -137,7 +137,7 @@ To cancel click ❌.
                 # NOTE: Handle stuff like if one of the channels get deleted.
 
             async def yes():
-                db.report_channels.update_one({"guild_id": data['guild_id']}, {"$set": data})
+                await db.report_channels.update_one({"guild_id": data['guild_id']}, {"$set": data})
                 await ui.embed(self, ctx, title="Success!", description=f"Successfully overwrote the report channel to {channel.mention}", color=ui.colors['green'])
             
             async def no():
@@ -163,18 +163,18 @@ To cancel click ❌.
 
             return await confirmation.start()
 
-        db.report_channels.insert_one(data)
-        await ui.embed(self, ctx, title="Success!", description=f"Report channel successfully set to {channel.mention}. If you want to restore it back to a regular channel use the `{bot.getPrefix(ctx.guild, db)}restore_report_channel` command.", color=ui.colors['green'])
+        await db.report_channels.insert_one(data)
+        await ui.embed(self, ctx, title="Success!", description=f"Report channel successfully set to {channel.mention}. If you want to restore it back to a regular channel use the `{await bot.getPrefix(ctx.guild, db)}restore_report_channel` command.", color=ui.colors['green'])
     
     @commands.command(description="Restores the report channel to just a regular channel. (This does not delete the channel)", usage="delete_report_channel")
     @commands.has_permissions(manage_guild=True)
     async def restore_report_channel(self, ctx):
-        if db.report_channels.count_documents({"guild_id": ctx.guild.id}):
-            channelData = db.report_channels.find_one({"guild_id": ctx.guild.id})
+        if await db.report_channels.count_documents({"guild_id": ctx.guild.id}):
+            channelData = await db.report_channels.find_one({"guild_id": ctx.guild.id})
             channel = self.bot.get_channel(channelData['channel_id'])
 
             async def yes():
-                db.report_channels.delete_one({"guild_id": ctx.guild.id})
+                await db.report_channels.delete_one({"guild_id": ctx.guild.id})
                 await ui.embed(self, ctx, title="Success!", description=f"Successfully restored {channel.mention} to a regular channel.", color=ui.colors['green'])
             
             async def no():
@@ -198,7 +198,7 @@ To cancel click ❌.
         await ui.embed(
             self, ctx, color=ui.colors['red'],
             title="There is no report channel in this server.",
-            description=f"To set one use the `{bot.getPrefix(ctx.guild, db)}set_report_channel` command."
+            description=f"To set one use the `{await bot.getPrefix(ctx.guild, db)}set_report_channel` command."
         )
     
     @commands.command(description="A chatbot channel let's you talk to a 'machine learning' powered chatbot that responds like a human.", usage="set_chatbot_channel <mention a channel>")
@@ -210,15 +210,16 @@ To cancel click ❌.
         if channel is None:
             return await ui.properUsage(self, ctx, f"set_chatbot_channel {ctx.channel.mention}")
         
-        if db.chatbots.count_documents({"guild_id": ctx.guild.id}):
+        if await db.chatbots.count_documents({"guild_id": ctx.guild.id}):
 
-            channel_id = db.chatbots.find_one({"guild_id": ctx.guild.id})['channel_id']
+            channel_id = await db.chatbots.find_one({"guild_id": ctx.guild.id})
+            channel_id = channel_id['channel_id']
             channel_old = ctx.guild.get_channel(int(channel_id))
 
             if channel_old:
 
                 async def yes():
-                    db.chatbots.update_one({"guild_id": ctx.guild.id}, {"$set": {"channel_id": channel.id}})
+                    await db.chatbots.update_one({"guild_id": ctx.guild.id}, {"$set": {"channel_id": channel.id}})
                     await ui.embed(self, ctx, description=f"Successfully replaced the old chatbot channel with {channel.mention}", color=ui.colors['green'])
                     
                 async def no():
@@ -243,7 +244,7 @@ To cancel click ❌.
                 delete_old = True
         
         if delete_old:
-            db.chatbots.delete_many({"guild_id": ctx.guild.id})
+            await db.chatbots.delete_many({"guild_id": ctx.guild.id})
 
         data = {
             "guild_id": ctx.guild.id,
@@ -251,7 +252,7 @@ To cancel click ❌.
             "additional_data": ui.ctxAdditonalData(ctx)
         }
 
-        db.chatbots.insert_one(data)
+        await db.chatbots.insert_one(data)
 
         await ui.embed(
             self, ctx, color=ui.colors['green'],
@@ -261,11 +262,11 @@ To cancel click ❌.
     @commands.command(description="Restores the chatbot channel back to a regular channel. (This does not delete the channel)", usage="restore_chatbot_channel")
     @commands.has_permissions(manage_guild=True)
     async def restore_chatbot_channel(self, ctx):
-        if not db.chatbots.count_documents({"guild_id": ctx.guild.id}):
-            return await ui.embed(self, ctx, title="There is no chatbot channel in this server.", description=f"To set one use the `{bot.getPrefix(ctx.guild, db)}set_chatbot_channel` command.", color=ui.colors['red'])
+        if not await db.chatbots.count_documents({"guild_id": ctx.guild.id}):
+            return await ui.embed(self, ctx, title="There is no chatbot channel in this server.", description=f"To set one use the `{await bot.getPrefix(ctx.guild, db)}set_chatbot_channel` command.", color=ui.colors['red'])
         
         async def yes():
-            db.chatbots.delete_many({"guild_id": ctx.guild.id})
+            await db.chatbots.delete_many({"guild_id": ctx.guild.id})
             await ui.embed(self, ctx, title="Successfully deleted the chatbot channel.", color=ui.colors['green'])
             
         async def no():

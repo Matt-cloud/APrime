@@ -7,6 +7,7 @@ import datetime
 import random
 import time
 import asyncio
+import string
 
 colors = {
     "red": 0xF44336,
@@ -36,6 +37,9 @@ defaultFooter = {
 }
 
 strftime = "%b %m, %Y at %I:%M %p"
+
+def createToken(length=10):
+    return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 
 class reactionConfirmation:
     def __init__(self, bot, ctx, content, reactions, **kwargs):
@@ -125,11 +129,11 @@ def ctxAdditonalData(ctx):
 async def properUsage(self, ctx, example, send=True):
     fields = [
         {
-            "Proper Usage": f"{bot.getPrefix(ctx.guild, db)}{ctx.command.usage}",
+            "Proper Usage": f"{await bot.getPrefix(ctx.guild, db)}{ctx.command.usage}",
             "inline": False
         },
         {
-            "Example": f"{bot.getPrefix(ctx.guild, db)}{example}",
+            "Example": f"{await bot.getPrefix(ctx.guild, db)}{example}",
             "inline": False
         }
     ]
@@ -176,6 +180,11 @@ async def embed(self, ctx, title=None, description=None, url=None, fields=None, 
     if showTimeStamp:
         e.timestamp = datetime.datetime.now()
     
+    if isinstance(ctx, (discord.User, discord.Member)):
+        author = ctx
+    else:
+        author = ctx.author
+    
     if thumbnail != 0:
         if thumbnail:
             e.set_thumbnail(url=thumbnail)
@@ -187,13 +196,13 @@ async def embed(self, ctx, title=None, description=None, url=None, fields=None, 
 
     if footer:
         icon = self.bot.user.avatar_url
-        text = footer["text"].replace("//author//", f"{ctx.author.name}#{ctx.author.discriminator}")
+        text = footer["text"].replace("//author//", f"{author.name}#{author.discriminator}")
 
         if footer['icon']:
             icon = footer['icon']
             if "//author.avatar//" in footer['icon']:
-                if ctx.author.avatar_url:
-                    icon = ctx.author.avatar_url
+                if author.avatar_url:
+                    icon = author.avatar_url
         
         e.set_footer(text=text, icon_url=icon)
     

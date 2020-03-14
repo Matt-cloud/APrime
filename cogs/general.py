@@ -48,7 +48,7 @@ class General(commands.Cog):
     @commands.command(description="Returns the list of commands", usage="help")
     async def help(self, ctx):
         commands = []
-        prefix = bot.getPrefix(ctx.guild, db)
+        prefix = await bot.getPrefix(ctx.guild, db)
 
         for command in self.bot.commands:
             # First turn it into an array so we could sort it
@@ -85,8 +85,8 @@ class General(commands.Cog):
                 color=ui.colors['red']
             )
         
-        if db.report_channels.count_documents({"guild_id": ctx.guild.id}):
-            channelData = db.report_channels.find_one({"guild_id": ctx.guild.id})
+        if await db.report_channels.count_documents({"guild_id": ctx.guild.id}):
+            channelData = await db.report_channels.find_one({"guild_id": ctx.guild.id})
             channel = self.bot.get_channel(channelData['channel_id'])
             
             reportData = { # Maybe store in database when database is upgraded
@@ -98,7 +98,8 @@ class General(commands.Cog):
                     "channel_id": ctx.channel.id,
                     "guild_id": ctx.guild.id,
                     "jump_url": ctx.message.jump_url 
-                }
+                },
+                "additional_data": ui.ctxAdditonalData(ctx)
             }
 
             report_embed = await ui.embed(
@@ -122,7 +123,7 @@ Jump Url : {reportData['report_from']['jump_url']}
             await ui.embed(self, ctx, title=f"A report for {ui.discrim(user)} has been successfully submitted.", description=reason, color=ui.colors['green'], thumbnail=user.avatar_url)
             return
         
-        await ui.embed(self, ctx, title="No report channel for this server", description=f"In order to report users that are violating the rules of the server, a server moderator must first set a report channel using the `{bot.getPrefix(ctx.guild, db)}set_report_channel` where reports will be sent to.", color=ui.colors['red'])
+        await ui.embed(self, ctx, title="No report channel for this server", description=f"In order to report users that are violating the rules of the server, a server moderator must first set a report channel using the `{await bot.getPrefix(ctx.guild, db)}set_report_channel` where reports will be sent to.", color=ui.colors['red'])
     
     @commands.command(description="Returns a link for your google query.", usage="google <query>")
     async def google(self, ctx, *, query: str = None):
@@ -131,6 +132,135 @@ Jump Url : {reportData['report_from']['jump_url']}
         
         url = "https://google.com/search?q=" + query.replace(" ", "+")
         await ui.embed(self, ctx, title="Here is your query.", description=url, thumbnail="https://cdn4.iconfinder.com/data/icons/new-google-logo-2015/400/new-google-favicon-512.png")
+    
+    @commands.command(description="Reminds you about something in x minutes or hours.", usage="remindme <when> <reminder>")
+    async def remindme(self, ctx, *, x: str = None):
+        if x is None:
+            return await ui.properUsage(self, ctx, "remindme 12h wash the dishes")
+
+        units = {
+            "s": 1,
+            "m": 60,
+            "h": 3600,
+            "d": 86400,
+            "w": 604800
+        }
+
+        unitsConversion = {
+            "second": "s",
+            "minute": "m",
+            "hour": "h",
+            "day": "d",
+            "week": "w"
+        }
+
+        intervals = []
+        humanIntervals = []
+        labels = []
+        
+        x = x.strip()
+        x = x.split()
+
+        reason = []
+
+        keepGoing = True
+
+        for index, i in enumerate(x):
+            iNormal = i
+            i = i.lower()
+            
+            success = True
+
+            if keepGoing:
+                _digits = re.findall(r'\d+', i) # Get all digits from string like 12h
+
+                if _digits: # If there are any digits found then proceed
+                    digits = int(_digits[0])
+                    humanDigit = digits
+
+                    unit = i.replace(_digits[0], "") # Get the letters only
+
+                    # Convert units like second to single letters like s (If failed to do so then it's a game over)
+                    if len(unit) > 1:
+                        if unit.endswith("s"):
+                            unit = unit[:-1] # Remove the s in the end
+
+                        if unit in unitsConversion:
+                            unit = unitsConversion[unit]
+                        else:
+                            success = False
+                    
+
+                    if unit in units:
+
+                        interval = digits * units[unit]
+                        label = {v:k for k,v in unitsConversion.items()}[unit]
+
+                        if humanDigit > 1:
+                            label = label + "s"
+
+                        intervals.append(interval)
+                        humanIntervals.append(humanDigit)
+                        labels.append(label)
+
+                    else:
+                        success = False
+
+                else: # If there are no digits found then it's a game over
+                    success = False
+            else:
+                success = False
+            
+            if not success:
+                keepGoing = False
+                reason.append(iNormal)
+        
+        reason = " ".join(reason)
+        totalSeconds = sum(intervals)
+        title = "Successfully set the reminder."
+        labelList = []
+
+        if reason.strip() == "" or totalSeconds == 0:
+            return await ui.properUsage(self, ctx, "remindme 12h wash the dishes")
+
+        for interval, label in zip(humanIntervals, labels):
+            labelList.append(f"{interval} {label}")
+        
+        if len(labelList) > 1:
+            labelList.insert(-1, "and")
+
+        completeLabel = " ".join(labelList)
+        description = f"I will remind you to {reason} in `{completeLabel}`"
+
+        while True:
+            _id = ui.createToken()
+            if not await db.reminders.count_documents({"id": _id}):
+                break
+
+        data = {
+            "id": _id,
+            "total_seconds": totalSeconds,
+            "timestamp": int(time.time()),
+            "completeLabel": completeLabel,
+            "intervals": intervals,
+            "labels": labels,
+            "user": ctx.author.id,
+            "reminder": reason,
+            "additional_data": ui.ctxAdditonalData(ctx)
+        }
+
+        await db.reminders.insert_one(data)
+
+        await ui.embed(self, ctx, title=title, description=description, color=ui.colors['green'])
+    
+    @commands.command(description="DMs you all of your reminders and you are able to cancel them by clicking the X reaction.", usage="myreminders", aliases=['reminders'])
+    async def myreminders(self, ctx):
+        serverPrefix = await bot.getPrefix(ctx.guild, db)
+
+        # TODO: Work on this command
+
+        if not await db.reminders.count_documents({"user": ctx.author.id}):
+            return await ui.embed(self, ctx, title="Sorry but you do not have any reminders right now.", description=f"To set a reminder use the `{serverPrefix}remindme` command.", color=ui.colors['red'])
 
 def setup(bot):
     bot.add_cog(General(bot))

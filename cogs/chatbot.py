@@ -11,8 +11,6 @@ class ChatBotHandler(commands.Cog):
         self.bot = bot
         self.chatbot = ChatBot(
             "Dimitri",
-            storage_adapter="chatterbot.storage.MongoDatabaseAdapter",
-            database_uri=uri,
             logic_adapters=[
                 'chatterbot.logic.BestMatch'
             ]
@@ -23,23 +21,24 @@ class ChatBotHandler(commands.Cog):
     
     @commands.Cog.listener()
     async def on_message(self, message):
-        channel_id, guild_id = message.channel.id, message.guild.id
-        server_prefix = bot.getPrefix(message.guild, db)
+        if message.guild:
+            channel_id, guild_id = message.channel.id, message.guild.id
+            server_prefix = await bot.getPrefix(message.guild, db)
 
-        if message.author.bot:
-            return # Ignore all bots
-        
-        if message.content == "" or message.content is None:
-            return # Ignore empty messages
-        
-        if message.content.startswith(server_prefix):
-            return
-
-        if db.chatbots.count_documents({"guild_id": guild_id, "channel_id": channel_id}):
-            content = message.content
-            response = await self.bot.loop.create_task(self.getResponse(content))
+            if message.author.bot:
+                return # Ignore all bots
             
-            await message.channel.send(response)
+            if message.content == "" or message.content is None:
+                return # Ignore empty messages
+            
+            if message.content.startswith(server_prefix):
+                return
+
+            if await db.chatbots.count_documents({"guild_id": guild_id, "channel_id": channel_id}):
+                content = message.content
+                response = await self.bot.loop.create_task(self.getResponse(content))
+                
+                await message.channel.send(response)
     
 def setup(bot):
     bot.add_cog(ChatBotHandler(bot))

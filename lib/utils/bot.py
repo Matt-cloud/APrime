@@ -9,9 +9,9 @@ with open(configFile) as f:
 def getDefaultPrefix():
     return config['prefix']
 
-def getPrefix(guild, db, asList=False):
+async def getPrefix(guild, db, asList=False):
     prefixes = []
-    prefixData = db.prefixes.find_one({"guild_id": guild.id})
+    prefixData = await db.prefixes.find_one({"guild_id": guild.id})
 
     if prefixData:
         cPrefix = prefixData['prefix']

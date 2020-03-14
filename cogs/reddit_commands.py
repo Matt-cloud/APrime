@@ -17,9 +17,10 @@ class RedditCommands(commands.Cog):
         loadingEmbed = await ui.loadingEmbed(self, ctx, description="Searching for subreddits that match your query.", send=False)
         loading = await ctx.send(embed=loadingEmbed)
         
-        if db.cached_subreddits.count_documents({"query": query.lower()}):
+        if await db.cached_subreddits.count_documents({"query": query.lower()}):
             t_start = time.perf_counter()
-            results = db.cached_subreddits.find_one({"query": query.lower()})['results_md']
+            results = await db.cached_subreddits.find_one({"query": query.lower()})
+            results = results['results_md']
             t_stop = time.perf_counter()
             t_elapsed = t_stop - t_start
             searchTime = round(t_elapsed * 1000, 2)
@@ -53,10 +54,11 @@ class RedditCommands(commands.Cog):
                 "cached_on": int(time.time()),
                 "results_md": results, #md = markdown k?
                 "results": results_actual,
-                "search_time": t_stop - t_start
+                "search_time": t_stop - t_start,
+                "additional_data": ui.ctxAdditonalData(ctx)
             }
             if results:
-                db.cached_subreddits.insert_one(data)
+                await db.cached_subreddits.insert_one(data)
             searchTime = round(data['search_time']*1000, 2)
         
         await loading.delete()
@@ -82,7 +84,7 @@ class RedditCommands(commands.Cog):
     
     @commands.command(alias=['memes', 'dankmemes', 'me_irl', 'meirl'], description="Returns the finest memes from reddit.", usage="meme")
     async def meme(self, ctx):
-        if not db.memes.count_documents({}):
+        if not await db.memes.count_documents({}):
             return await ui.embed(self, ctx, title="Memes out of stock", description="Just visit [reddit](https://reddit.com) dude.", color=ui.colors['red'])
         
         nsfw = ctx.channel.is_nsfw()
@@ -96,7 +98,11 @@ class RedditCommands(commands.Cog):
                 {"$match": {"nsfw": False}}
             )
 
-        memes = db.memes.aggregate(aggregate_opts)
+        memes = []
+
+        async for meme in db.memes.aggregate(aggregate_opts):
+            memes.append(meme)
+
         newMemes = []
 
         for meme in memes:
@@ -118,21 +124,25 @@ class RedditCommands(commands.Cog):
             "timestamp": int(time.time())
         }
 
-        logger.log(data['id'], level="debug")
-        db.memes.update_one({"id": data['id']}, {"$push": {"requested_by": requested_by}})
+        await logger.log(data['id'], level="debug")
+        await db.memes.update_one({"id": data['id']}, {"$push": {"requested_by": requested_by}})
 
         await ui.embed(self, ctx, title=data['title'], url=data['shortlink'], image=data['url'], thumbnail=0, footer=footer)
     
     @commands.command(description="Returns the finest dad jokes from reddit.", usage="dadjoke")
     async def dadjoke(self, ctx):
-        if not db.dadjokes.count_documents({}):
+        if not await db.dadjokes.count_documents({}):
             return await ui.embed(self, ctx, title="Dad jokes out of stock.", color=ui.colors['red'])
         
         aggregate_opts = [
             {"$sample": {"size": 120}}
         ]
 
-        dadjokes = db.dadjokes.aggregate(aggregate_opts)
+        dadjokes = []
+
+        async for dadjoke in db.dadjokes.aggregate(aggregate_opts):
+            dadjokes.append(dadjoke)
+
         newDadjokes = []
 
         for dadjoke in dadjokes:
@@ -154,8 +164,8 @@ class RedditCommands(commands.Cog):
             "timestamp": int(time.time())
         }
 
-        logger.log(data['id'], level="debug")
-        db.dadjokes.update_one({"id": data['id']}, {"$push": {"requested_by": requested_by}})
+        await logger.log(data['id'], level="debug")
+        await db.dadjokes.update_one({"id": data['id']}, {"$push": {"requested_by": requested_by}})
 
         await ui.embed(self, ctx, title=data['title'], description=data['selftext'], footer=footer)
 

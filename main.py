@@ -51,7 +51,7 @@ class Bot(commands.Bot):
         self.start_time = datetime.datetime.utcnow()
 
     async def get_prefix_(self, bot_, message):
-        prefix = bot.getPrefix(message.guild, db, asList=True)
+        prefix = await bot.getPrefix(message.guild, db, asList=True)
         return commands.when_mentioned_or(*prefix)(bot_, message)
 
     async def load_all_extensions(self):
@@ -64,9 +64,9 @@ class Bot(commands.Bot):
 
             try:
                 self.load_extension(f'cogs.{extension}')
-                logger.log(f"Extension : {extension} is loaded")
+                await logger.log(f"Extension : {extension} is loaded")
             except Exception as e:
-                logger.log(f"Failed to load extension : {extension}")
+                await logger.log(f"Failed to load extension : {extension}")
 
 
     async def on_ready(self):
@@ -74,8 +74,9 @@ class Bot(commands.Bot):
         self.app_info = await self.application_info()
         x = self.app_info
 
-        customPrefixes = db.prefixes.count_documents({})
-        savedMemes = db.memes.count_documents({})
+        customPrefixes = await db.prefixes.count_documents({})
+        savedMemes = await db.memes.count_documents({})
+        savedDadJokes = await db.dadjokes.count_documents({})
 
         ui = f"""
 # Discord.py Version : {discord.__version__}
@@ -85,8 +86,9 @@ class Bot(commands.Bot):
 # Default Prefix : {self.config['prefix']}
 # {customPrefixes} custom prefix{'s' if customPrefixes > 1 else ''}
 # {savedMemes} saved meme{'s' if savedMemes > 1 else ''}
+# {savedDadJokes} saved dad joke{'s' if savedDadJokes > 1 else ''}
 """
-        logger.log(ui)
+        await logger.log(ui)
 
     async def on_message(self, message):
         if message.author.bot:
