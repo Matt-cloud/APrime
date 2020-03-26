@@ -8,9 +8,9 @@ class Economy(commands.Cog):
     async def update_profile_xp(self, xp, user_id):
         if await db.profiles.count_documents({"id": user_id}):
 
-            data = db.profiles.find_one({"id": user_id})
+            data = await db.profiles.find_one({"id": user_id})
 
-            if data['xp'] >= data['total_xp']:
+            if data['xp'] >= data['total_xp'] or data['xp'] + xp >= data['total_xp']:
                 data['total_xp'] = int(data['total_xp'] * 1.5)
                 data['xp'] = 0
                 data['level'] = data['level'] + 1
@@ -19,6 +19,8 @@ class Economy(commands.Cog):
                 data['coins'] = data['coins'] + coins_reward
 
                 await db.profiles.update_one({"id": user_id}, {"$set": data})
+            else:
+                await db.profiles.update_one({"id": user_id}, {"$inc": {"xp": xp}})
 
         else:
             data = {
