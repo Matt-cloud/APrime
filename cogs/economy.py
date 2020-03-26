@@ -18,6 +18,7 @@ class Economy(commands.Cog):
                 "description": "",
                 "gender": "Male"
             }
+            await db.profiles.insert_one(data)
 
     @commands.Cog.listener()
     async def on_command_completion(self, ctx):
