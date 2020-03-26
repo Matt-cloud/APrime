@@ -304,6 +304,13 @@ To cancel click ❌.
             channel = await db.report_channels.find_one({"guild_id": ctx.guild.id})
             channel = self.bot.get_channel(channel['channel_id'])
 
+            if not channel:
+                name = "Deleted"
+                guild = "Unknown"
+            else:
+                name = channel.name 
+                guild = channel.guild.name
+
             reports = []
             users = []
 
@@ -316,8 +323,8 @@ To cancel click ❌.
             user = self.bot.get_user(frequent)
 
             fields = [
-                {"Name": channel.name, "inline": False},
-                {"Server": channel.guild.name, "inline": False},
+                {"Channel": name, "inline": False},
+                {"Server": guild, "inline": False},
                 {"Reports Count": len(reports), "inline": False},
                 {"Frequently Reported": ui.discrim(user), "inline": False}
             ]
