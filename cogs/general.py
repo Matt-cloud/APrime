@@ -74,6 +74,7 @@ class General(commands.Cog):
         await ui.embed(self, ctx, title="Command List", description=output)
 
     @commands.command(description="Allows you to report members to the server moderator.", usage="report <mention a member> <reason for being reported>")
+    @checks.guild_only()
     async def report(self, ctx, user: discord.Member = None, *, reason: str = None):
         if user is None or reason is None:
             return await ui.properUsage(self, ctx, f"report {ctx.author.mention} reported for being too cool :)")
@@ -253,14 +254,10 @@ Jump Url : {reportData['report_from']['jump_url']}
 
         await ui.embed(self, ctx, title=title, description=description, color=ui.colors['green'])
     
-    @commands.command(description="DMs you all of your reminders and you are able to cancel them by clicking the X reaction.", usage="myreminders", aliases=['reminders'])
+    @commands.command(description="DMs you a link that lets you see and manage your reminders.", usage="myreminders", aliases=['reminders'])
     async def myreminders(self, ctx):
-        serverPrefix = await bot.getPrefix(ctx.guild, db)
-
-        # TODO: Work on this command
-
-        if not await db.reminders.count_documents({"user": ctx.author.id}):
-            return await ui.embed(self, ctx, title="Sorry but you do not have any reminders right now.", description=f"To set a reminder use the `{serverPrefix}remindme` command.", color=ui.colors['red'])
+        # TODO: Add to web dashboard
+        pass
 
 def setup(bot):
     bot.add_cog(General(bot))

@@ -41,6 +41,16 @@ strftime = "%b %m, %Y at %I:%M %p"
 def createToken(length=10):
     return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 
+class DeltaTemplate(string.Template):
+    delimiter = "%"
+
+def strfdelta(tdelta, fmt):
+    d = {"D": tdelta.days}
+    d["H"], rem = divmod(tdelta.seconds, 3600)
+    d["M"], d["S"] = divmod(rem, 60)
+    t = DeltaTemplate(fmt)
+    return t.substitute(**d)
+
 class reactionConfirmation:
     def __init__(self, bot, ctx, content, reactions, **kwargs):
         self.reactions = reactions
@@ -63,13 +73,20 @@ class reactionConfirmation:
             await message.add_reaction(reaction)
         
         if not self.check:
+
+            if isinstance(self.ctx, (discord.User, discord.Member)):
+                author = self.ctx 
+            else:
+                author = self.ctx.author 
+
             def check(reaction, user):
-                return user == self.ctx.author and str(reaction.emoji) in self.reactions and reaction.message.id == message.id
+                return user == author and str(reaction.emoji) in self.reactions and reaction.message.id == message.id
         else:
             check = self.check
         
         try:
             reaction, user = await self.bot.wait_for('reaction_add', timeout=self.timeout, check=check)
+            print(reaction.message.id, message.id, reaction.message.id == message.id)
             function = self.reactions[str(reaction.emoji)]
 
             if asyncio.iscoroutinefunction(function):
@@ -127,13 +144,19 @@ def ctxAdditonalData(ctx):
     return data
 
 async def properUsage(self, ctx, example, send=True):
+    
+    if ctx.guild:
+        prefix = await bot.getPrefix(ctx.guild, db)
+    else:
+        prefix = bot.getDefaultPrefix()
+
     fields = [
         {
-            "Proper Usage": f"{await bot.getPrefix(ctx.guild, db)}{ctx.command.usage}",
+            "Proper Usage": f"{prefix}{ctx.command.usage}",
             "inline": False
         },
         {
-            "Example": f"{await bot.getPrefix(ctx.guild, db)}{example}",
+            "Example": f"{prefix}{example}",
             "inline": False
         }
     ]

@@ -10,6 +10,10 @@ def getDefaultPrefix():
     return config['prefix']
 
 async def getPrefix(guild, db, asList=False):
+
+    if not guild:
+        return getDefaultPrefix()
+
     prefixes = []
     prefixData = await db.prefixes.find_one({"guild_id": guild.id})
 

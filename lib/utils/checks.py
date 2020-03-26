@@ -15,3 +15,10 @@ def is_owner():
             return True 
         raise exceptions.OwnerOnlyCommand
     return commands.check(predicate)
+
+def guild_only():
+    async def predicate(ctx):
+        if ctx.guild:
+            return True 
+        raise exceptions.GuildOnlyCommand
+    return commands.check(predicate)

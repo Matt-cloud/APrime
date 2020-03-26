@@ -51,7 +51,10 @@ class Bot(commands.Bot):
         self.start_time = datetime.datetime.utcnow()
 
     async def get_prefix_(self, bot_, message):
-        prefix = await bot.getPrefix(message.guild, db, asList=True)
+        if not message.guild:
+            prefix = [bot.getDefaultPrefix()]
+        else:
+            prefix = await bot.getPrefix(message.guild, db, asList=True)
         return commands.when_mentioned_or(*prefix)(bot_, message)
 
     async def load_all_extensions(self):
