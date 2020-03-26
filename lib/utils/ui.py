@@ -1,6 +1,7 @@
 from discord.embeds import Embed
 from lib.utils import bot
 from lib.utils.globals import db
+from collections import Counter
 
 import discord 
 import datetime
@@ -40,6 +41,10 @@ strftime = "%b %m, %Y at %I:%M %p"
 
 def createToken(length=10):
     return "".join(random.choices(string.ascii_letters + string.digits, k=length))
+
+def most_frequent(x):
+    oc = Counter(x)
+    return oc.most_common(1)[0][0]
 
 class DeltaTemplate(string.Template):
     delimiter = "%"
