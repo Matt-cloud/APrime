@@ -294,6 +294,39 @@ To cancel click ❌.
         )
 
         await confirmation.start()
+    
+    @commands.command(description="DM's you the server's report channel and other information about it,", usage="report_channel", aliases=["reports"])
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.has_permissions(manage_guild=True)
+    async def report_channel(self, ctx):
+
+        if await db.report_channels.count_documents({"guild_id": ctx.guild.id}):
+            channel = await db.report_channels.find_one({"guild_id": ctx.guild.id})
+            channel = self.bot.get_channel(channel['channel_id'])
+
+            reports = []
+            users = []
+
+            async for item in db.reports.find({}):
+                if item['report_from']['guild_id'] == ctx.guild.id:
+                    reports.append(item)
+                    users.append(item['user'])
+
+            frequent = ui.most_frequent(users)
+            user = self.bot.get_user(frequent)
+
+            fields = [
+                {"Name": channel.name, "inline": False},
+                {"Server": channel.guild.name, "inline": False},
+                {"Reports Count": len(reports), "inline": False},
+                {"Frequently Reported": ui.discrim(user), "inline": False}
+            ]
+
+            info = await ui.embed(self, ctx, send=False, title="Report Channel Information", fields=fields, thumbnail=ctx.guild.icon_url)
+            await ctx.author.send(embed=info)
+
+            await ui.embed(self, ctx, title="Report Channel Information Sent", description=f"{ctx.author.mention} I have successfully sent you the basic information for the report channel of this server.")
+            # TODO : Add a dashboard for reports (MOOoore info)
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
