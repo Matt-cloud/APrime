@@ -35,6 +35,11 @@ class Events(commands.Cog):
             p = dict(title="Common Error", description=f"```{error}```")
         elif isinstance(error, commands.errors.BadArgument):
             p = dict(title="Bad Argument", description=f"{error}")
+        elif isinstance(error, commands.errors.CommandOnCooldown):
+            retry_after = int(error.retry_after)
+            s = ""
+            if retry_after > 1: s = "s"
+            p = dict(title="You are on cooldown to prevent rate limitting.", description=f"Please try again in `{retry_after}{s}`")
         else:
             fullTB = "".join(traceback.format_exception(type(error), error, error.__traceback__))
             p = dict(title="Error", description=f"```{fullTB}```")
