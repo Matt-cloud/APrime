@@ -96,6 +96,11 @@ class Bot(commands.Bot):
     async def on_message(self, message):
         if message.author.bot:
             return  # ignore all bots
+        
+        if message.guild:
+            if message.content.lower() == bot.getDefaultPrefix() + "prefix":
+                serverPrefix = bot.getPrefix(message.guild, db)
+                await message.channel.send(f"The command prefix for this server is : {serverPrefix}")
 
         await self.process_commands(message)
 
