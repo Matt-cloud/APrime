@@ -269,5 +269,32 @@ Jump Url : {reportData['report_from']['jump_url']}
         # TODO: Add to web dashboard
         pass
 
+    @commands.command(description="Shows you the chatbot channel for this server.", usage="chatbot_channel")
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    async def chatbot_channel(self, ctx):
+        if await db.chatbots.count_documents({"guild_id": ctx.guild.id}):
+            data = await db.chatbots.find_one({"guild_id": ctx.guild.id})
+            
+            channel = ctx.guild.get_channel(data['channel_id'])
+            setby = data['additional_data']['author']['name'] + "#" + data['additional_data']['author']['name']
+            timestamp = data['additional_data']['timestamp']
+
+            if channel:
+                name = channel.name
+                conversations = await channel.history(limit=None).flatten()
+            else:
+                name = "Deleted"
+            
+            seton = datetime.datetime.utcfromtimestamp(timestamp).strftime(ui.strftime)
+            
+            fields = [
+                {"Channel": name, "inline": False},
+                {"Conversations": len(conversations), "inline": False},
+                {"Set on": seton, "inline": False}
+            ]
+
+            await ui.embed(self, ctx, title="Here is the chatbot channel for this server", fields=fields)
+
+
 def setup(bot):
     bot.add_cog(General(bot))
