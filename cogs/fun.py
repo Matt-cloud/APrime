@@ -5,6 +5,7 @@ class Fun(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=['dice'], description="Rolls the dice", usage="rolladice")
+    @commands.cooldown(1, 2, commands.BucketType.user)
     async def rolladice(self, ctx):
         dice = random.randint(1, 6)
         fp = f"dice{dice}.gif"

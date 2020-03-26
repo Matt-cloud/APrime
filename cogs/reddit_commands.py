@@ -5,6 +5,7 @@ class RedditCommands(commands.Cog):
         self.bot = bot 
     
     @commands.command(aliases=['findreddit', 'findsubreddit'], description="Lets you find a subreddit by using keywords or sentences.", usage="findareddit <query>")
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def findareddit(self, ctx, *, query: str = None):
         if not query:
             return await ui.properUsage(self, ctx, "findareddit A subreddit with actually funny content.")
@@ -83,6 +84,7 @@ class RedditCommands(commands.Cog):
         await ui.embed(self, ctx, title=title, description=description, thumbnail="https://cdn3.iconfinder.com/data/icons/2018-social-media-logotypes/1000/2018_social_media_popular_app_logo_reddit-512.png", fields=fields)
     
     @commands.command(alias=['memes', 'dankmemes', 'me_irl', 'meirl'], description="Returns the finest memes from reddit.", usage="meme")
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def meme(self, ctx):
         if not await db.memes.count_documents({}):
             return await ui.embed(self, ctx, title="Memes out of stock", description="Just visit [reddit](https://reddit.com) dude.", color=ui.colors['red'])
@@ -130,6 +132,7 @@ class RedditCommands(commands.Cog):
         await ui.embed(self, ctx, title=data['title'], url=data['shortlink'], image=data['url'], thumbnail=0, footer=footer)
     
     @commands.command(description="Returns the finest dad jokes from reddit.", usage="dadjoke")
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def dadjoke(self, ctx):
         if not await db.dadjokes.count_documents({}):
             return await ui.embed(self, ctx, title="Dad jokes out of stock.", color=ui.colors['red'])

@@ -5,6 +5,7 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     @commands.command(description="Allows you to change the prefix that the bot recognizes for this server. (Maximum of 7 characters and no spaces)", usage="set_custom_prefix <new_prefix>")
+    @commands.cooldown(1, 120, commands.BucketType.user)
     @commands.has_permissions(manage_guild=True)
     async def set_custom_prefix(self, ctx, new_prefix: str = None):
         if not new_prefix:
@@ -63,6 +64,7 @@ To cancel click ❌.
         await ui.embed(self, ctx, title="Successfully changed the server prefix.", description=allowPrefixMessage, color=ui.colors['green'])
 
     @commands.command(description="Toggles the default prefix on and off for this server. (Can only be used if you have a custom prefix for this server)", usage="toggle_default_prefix")
+    @commands.cooldown(1, 60, commands.BucketType.user)
     @commands.has_permissions(manage_guild=True)
     async def toggle_default_prefix(self, ctx):
         prefixData = await db.prefixes.find_one({"guild_id": ctx.guild.id})
@@ -86,6 +88,7 @@ To cancel click ❌.
         await ui.embed(self, ctx, title="Successfully toggled the default prefix for this server.", description=description, color=ui.colors['green'])
 
     @commands.command(description="Deletes the custom prefix. If you have the default prefix turned off this will automatically turn it on.", usage="delete_custom_prefix")
+    @commands.cooldown(1, 120, commands.BucketType.user)
     @commands.has_permissions(manage_guild=True)
     async def delete_custom_prefix(self, ctx):
         prefixData = await db.prefixes.find_one({"guild_id": ctx.guild.id})
@@ -113,6 +116,7 @@ To cancel click ❌.
         await confirmation.start()
     
     @commands.command(description="Allows you to setup a report channel so that members can report other members.", usage="set_report_channel <mention a channel>")
+    @commands.cooldown(1, 120, commands.BucketType.user)
     @commands.has_permissions(manage_guild=True)
     async def set_report_channel(self, ctx, channel: discord.TextChannel = None):
         if channel is None:
@@ -167,6 +171,7 @@ To cancel click ❌.
         await ui.embed(self, ctx, title="Success!", description=f"Report channel successfully set to {channel.mention}. If you want to restore it back to a regular channel use the `{await bot.getPrefix(ctx.guild, db)}restore_report_channel` command.", color=ui.colors['green'])
     
     @commands.command(description="Restores the report channel to just a regular channel. (This does not delete the channel)", usage="delete_report_channel")
+    @commands.cooldown(1, 120, commands.BucketType.user)
     @commands.has_permissions(manage_guild=True)
     async def restore_report_channel(self, ctx):
         if await db.report_channels.count_documents({"guild_id": ctx.guild.id}):
@@ -202,6 +207,7 @@ To cancel click ❌.
         )
     
     @commands.command(description="A chatbot channel let's you talk to a 'machine learning' powered chatbot that responds like a human.", usage="set_chatbot_channel <mention a channel>")
+    @commands.cooldown(1, 120, commands.BucketType.user)
     @commands.has_permissions(manage_guild=True)
     async def set_chatbot_channel(self, ctx, channel: discord.TextChannel = None):
 
@@ -260,6 +266,7 @@ To cancel click ❌.
         )
     
     @commands.command(description="Restores the chatbot channel back to a regular channel. (This does not delete the channel)", usage="restore_chatbot_channel")
+    @commands.cooldown(1, 120, commands.BucketType.user)
     @commands.has_permissions(manage_guild=True)
     async def restore_chatbot_channel(self, ctx):
         if not await db.chatbots.count_documents({"guild_id": ctx.guild.id}):

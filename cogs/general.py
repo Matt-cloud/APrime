@@ -5,6 +5,7 @@ class General(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=['latency'], description="Returns the bot latency", usage="ping")
+    @commands.cooldown(1, 7, commands.BucketType.user)
     async def ping(self, ctx, host: str = None):
         if host:
             code = None
@@ -46,7 +47,10 @@ class General(commands.Cog):
         return await ctx.send(f"Ping Pong! :ping_pong: `{latency}ms`")
     
     @commands.command(description="Returns the list of commands", usage="help")
+    @commands.cooldown(1, 7, commands.BucketType.user)
     async def help(self, ctx):
+
+        # TODO : Improve this command
         commands = []
         prefix = await bot.getPrefix(ctx.guild, db)
 
@@ -74,6 +78,7 @@ class General(commands.Cog):
         await ui.embed(self, ctx, title="Command List", description=output)
 
     @commands.command(description="Allows you to report members to the server moderator.", usage="report <mention a member> <reason for being reported>")
+    @commands.cooldown(1, 30, commands.BucketType.user)
     @checks.guild_only()
     async def report(self, ctx, user: discord.Member = None, *, reason: str = None):
         if user is None or reason is None:
@@ -127,6 +132,7 @@ Jump Url : {reportData['report_from']['jump_url']}
         await ui.embed(self, ctx, title="No report channel for this server", description=f"In order to report users that are violating the rules of the server, a server moderator must first set a report channel using the `{await bot.getPrefix(ctx.guild, db)}set_report_channel` where reports will be sent to.", color=ui.colors['red'])
     
     @commands.command(description="Returns a link for your google query.", usage="google <query>")
+    @commands.cooldown(1, 4, commands.BucketType.user)
     async def google(self, ctx, *, query: str = None):
         if query is None:
             return await ui.properUsage(self, ctx, "google Top 10 stuff")
@@ -135,6 +141,7 @@ Jump Url : {reportData['report_from']['jump_url']}
         await ui.embed(self, ctx, title="Here is your query.", description=url, thumbnail="https://cdn4.iconfinder.com/data/icons/new-google-logo-2015/400/new-google-favicon-512.png")
     
     @commands.command(description="Reminds you about something in x minutes or hours.", usage="remindme <when> <reminder>")
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def remindme(self, ctx, *, x: str = None):
         if x is None:
             return await ui.properUsage(self, ctx, "remindme 12h wash the dishes")
@@ -255,6 +262,7 @@ Jump Url : {reportData['report_from']['jump_url']}
         await ui.embed(self, ctx, title=title, description=description, color=ui.colors['green'])
     
     @commands.command(description="DMs you a link that lets you see and manage your reminders.", usage="myreminders", aliases=['reminders'])
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def myreminders(self, ctx):
         # TODO: Add to web dashboard
         pass
