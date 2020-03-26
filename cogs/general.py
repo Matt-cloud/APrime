@@ -95,7 +95,7 @@ class General(commands.Cog):
             channelData = await db.report_channels.find_one({"guild_id": ctx.guild.id})
             channel = self.bot.get_channel(channelData['channel_id'])
             
-            reportData = { # Maybe store in database when database is upgraded
+            reportData = {
                 "user": user.id,
                 "reason": reason,
                 "report_by": ctx.author.id,
@@ -107,6 +107,8 @@ class General(commands.Cog):
                 },
                 "additional_data": ui.ctxAdditonalData(ctx)
             }
+
+            await db.reports.insert_one(reportData)
 
             report_embed = await ui.embed(
                 self, ctx, send=False, footer=None, thumbnail=user.avatar_url,
