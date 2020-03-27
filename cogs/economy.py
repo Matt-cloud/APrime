@@ -88,7 +88,7 @@ class Economy(commands.Cog):
         if user is None:
             user = ctx.author
         
-        prefix = bot.getPrefix(ctx.guild, db)
+        prefix = await bot.getPrefix(ctx.guild, db)
         
         if not await db.profiles.count_documents({"user_id": user.id}):
             await self.update_profile_xp(1, user.id)
@@ -112,7 +112,7 @@ class Economy(commands.Cog):
         if info['description'].strip() == "":
             description = "No description set."
             if ctx.author == user:
-                description += " You can set a description using the `{prefix}set_profile_description` command."
+                description += f" You can set a description using the `{prefix}set_profile_description` command."
 
         await ui.embed(self, ctx, title=f"{user.name}{s} Profile Information", description=description, fields=fields, thumbnail=user.avatar_url)
         
