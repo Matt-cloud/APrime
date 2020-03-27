@@ -97,7 +97,7 @@ class Economy(commands.Cog):
 
         fields = [
             {"XP": f"**{info['xp']}/{info['total_xp']}**"},
-            {f"Coins {self.icons.coin}": str(info['coins'])},
+            {f"Coins {self.icons.coin()}": str(info['coins'])},
             {"Level": str(info['level'])},
             {"Reputation": str(len(info['reputation']))},
             {"Gender": info['gender']}
