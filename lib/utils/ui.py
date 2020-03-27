@@ -48,7 +48,7 @@ class Icons:
         icon = self.bot.get_emoji(689733706037854275)
         if icon is None:
             return self.fallback 
-        return icon
+        return str(icon)
 
 def createToken(length=10):
     return "".join(random.choices(string.ascii_letters + string.digits, k=length))
