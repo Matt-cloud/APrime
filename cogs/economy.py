@@ -86,7 +86,9 @@ class Economy(commands.Cog):
     @commands.command(description="Shows you information about your profile or other's", usage="profile <mention a user (optional)>")
     async def profile(self, ctx, user: discord.Member = None):
         if user is None:
-            user = ctx.author 
+            user = ctx.author
+        
+        prefix = bot.getPrefix(ctx.guild, db)
         
         if not await db.profiles.count_documents({"user_id": user.id}):
             await self.update_profile_xp(1, user.id)
@@ -95,8 +97,24 @@ class Economy(commands.Cog):
 
         fields = [
             {"XP": f"**{info['xp']}/{info['total_xp']}**"},
-            {f"Coins {self.icons.coin}": str(info['coins'])}
+            {f"Coins {self.icons.coin}": str(info['coins'])},
+            {"Level": str(info['level'])},
+            {"Reputation": str(len(info['reputation']))},
+            {"Gender": info['gender']}
         ]
+
+        s = "'s"
+        if user.name.endswith("s"):
+            s = "'"
+        elif user.name.endswith(("'s", "'")):
+            s = ""
+        
+        if info['description'].strip() == "":
+            description = "No description set."
+            if ctx.author == user:
+                description += " You can set a description using the `{prefix}set_profile_description` command."
+
+        await ui.embed(self, ctx, title=f"{user.name}{s} Profile Information", description=description, fields=fields, thumbnail=user.avatar_url)
         
 
 def setup(bot):
