@@ -93,7 +93,7 @@ class Economy(commands.Cog):
         if not await db.profiles.count_documents({"user_id": user.id}):
             await self.update_profile_xp(1, user.id)
         
-        info = await db.profiles.find_one({"user_id": user.id})
+        info = await db.profiles.find_one({"id": user.id})
 
         fields = [
             {"XP": f"**{info['xp']}/{info['total_xp']}**"},
