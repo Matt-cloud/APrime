@@ -39,6 +39,17 @@ defaultFooter = {
 
 strftime = "%b %m, %Y at %I:%M %p"
 
+class Icons:
+    def __init__(self, bot):
+        self.bot = bot 
+        self.fallback = ":grey_question:"
+    
+    def coin(self):
+        icon = self.bot.get_emoji(689733706037854275)
+        if icon is None:
+            return self.fallback 
+        return icon
+
 def createToken(length=10):
     return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 

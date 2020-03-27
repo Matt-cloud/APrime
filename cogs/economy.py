@@ -4,6 +4,7 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.commandsCount = 0
+        self.icons = ui.Icons(bot)
     
     async def update_profile_xp(self, xp, user_id):
         if await db.profiles.count_documents({"id": user_id}):
@@ -30,7 +31,8 @@ class Economy(commands.Cog):
                 "level": 1,
                 "coins": 500,
                 "description": "",
-                "gender": "Male"
+                "gender": "Male",
+                "reputation": []
             }
             await db.profiles.insert_one(data)
 
@@ -80,6 +82,22 @@ class Economy(commands.Cog):
 
             self.commandsCount = 0
             await asyncio.sleep(60)
+    
+    @commands.command(description="Shows you information about your profile or other's", usage="profile <mention a user (optional)>")
+    async def profile(self, ctx, user: discord.Member = None):
+        if user is None:
+            user = ctx.author 
+        
+        if not await db.profiles.count_documents({"user_id": user.id}):
+            await self.update_profile_xp(1, user.id)
+        
+        info = await db.profiles.find_one({"user_id": user.id})
+
+        fields = [
+            {"XP": f"**{info['xp']}/{info['total_xp']}**"},
+            {f"Coins {self.icons.coin}": str(info['coins'])}
+        ]
+        
 
 def setup(bot):
     bot.add_cog(Economy(bot))
